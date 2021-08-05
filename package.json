@@ -4,7 +4,8 @@
     "main": "index.ts",
     "repository": "https://github.com/UW-SE-26/booking-backend.git",
     "scripts": {
-        "start": "tsc && node build/index.js"
+        "start": "tsc && node build/index.js",
+        "postinstall": "husky install"
     },
     "devDependencies": {
         "@types/express": "^4.17.13",
@@ -13,6 +14,8 @@
         "@typescript-eslint/parser": "^4.29.0",
         "eslint": "^7.32.0",
         "eslint-config-prettier": "^8.3.0",
+        "husky": "^7.0.1",
+        "lint-staged": "^11.1.1",
         "prettier": "^2.3.2",
         "typescript": "^4.3.5"
     },
@@ -20,5 +23,9 @@
         "discord.js": "^13.0.0-dev.t1628165339.3eb4140",
         "dotenv": "^10.0.0",
         "express": "^4.17.1"
+    },
+    "lint-staged": {
+        "*.ts": "eslint --cache --fix",
+        "*.{ts,css,md}": "prettier --write"
     }
 }
