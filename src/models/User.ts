@@ -5,7 +5,7 @@ interface User {
     email: string; 
     password: string; 
     registeredAt: Date; 
-    verified: Boolean; 
+    verified: boolean; 
 }
 
 const userSchema = new Schema<User>({ 
