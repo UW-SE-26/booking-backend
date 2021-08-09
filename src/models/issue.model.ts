@@ -20,4 +20,4 @@ const issueSchema = new Schema<Issue>({
 
 const issueModel = model<Issue>('Issue', issueSchema);
 
-export default { issueModel };
+export default issueModel;
