@@ -17,7 +17,6 @@ mongoose
     })
     .then(() => {
         console.log('Successfully connected to MongoDB database');
-
         const app = express();
 
         app.use('/api', apiRoutes);

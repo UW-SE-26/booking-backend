@@ -7,7 +7,7 @@ import crypto from 'crypto';
 export async function resetPasswordRoute(req: Request, res: Response): Promise<void> {
     const user = await User.findOne({ email: req.body.email });
     if (user === null) {
-        res.json({
+        res.status(400).json({
             error: 'User not found',
         });
         return;
