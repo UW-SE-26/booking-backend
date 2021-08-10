@@ -10,7 +10,7 @@ const router = Router();
 const registerRoute = async (req: Request, res: Response) => {
     const user = await User.findOne({ email: req.body.email });
     if (user !== null) {
-        res.json({
+        res.status(400).json({
             error: 'Email taken',
         });
         return;

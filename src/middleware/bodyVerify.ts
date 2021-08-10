@@ -9,7 +9,7 @@ const bodyVerify = (required: string[]): RequestHandler => {
         });
         if (missing.length > 0) {
             res.status(400).json({
-                error: 'missing fields',
+                error: 'Missing fields',
                 missing,
             });
             return;

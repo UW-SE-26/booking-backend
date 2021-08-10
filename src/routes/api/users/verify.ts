@@ -7,19 +7,19 @@ const router = Router();
 const verifyRoute = async (req: Request, res: Response) => {
     const user = await User.findOne({ email: req.body.email });
     if (user === null) {
-        res.json({
+        res.status(400).json({
             error: 'User not found',
         });
         return;
     }
     if (user.verified) {
-        res.json({
+        res.status(400).json({
             error: 'User already verified',
         });
         return;
     }
     if (user.emailCode !== req.body.code) {
-        res.json({
+        res.status(403).json({
             error: 'Invalid verification code',
         });
         return;

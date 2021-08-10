@@ -10,20 +10,20 @@ const router = Router();
 const loginRoute = async (req: Request, res: Response) => {
     const user = await User.findOne({ email: req.body.email });
     if (user === null) {
-        res.json({
+        res.status(400).json({
             error: 'Account not found',
         });
         return;
     }
     const passVerify = await argon2.verify(user.password, req.body.password);
     if (!passVerify) {
-        res.json({
+        res.status(403).json({
             error: 'Password incorrect',
         });
         return;
     }
     if (!user.verified) {
-        res.json({
+        res.status(403).json({
             error: 'Account not verified',
         });
         return;

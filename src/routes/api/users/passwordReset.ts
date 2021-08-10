@@ -36,13 +36,13 @@ const resetPasswordRoute = async (req: Request, res: Response) => {
 const changePasswordRoute = async (req: Request, res: Response) => {
     const user = await User.findOne({ email: req.body.email });
     if (user === null) {
-        res.json({
+        res.status(400).json({
             error: 'User not found',
         });
         return;
     }
     if (user.resetCode !== req.body.code || user.resetCode === '' || user.resetAt === 0) {
-        res.json({
+        res.status(400).json({
             error: 'Invalid reset (the code is invalid or the user has not requested a reset)',
         });
         return;
@@ -50,7 +50,7 @@ const changePasswordRoute = async (req: Request, res: Response) => {
 
     if ((Date.now() - user.resetAt) / 1000 / 60 / 60 >= 1) {
         //if it's been longer than an hour since reset
-        res.json({
+        res.status(403).json({
             error: 'Reset code expired',
         });
         user.resetCode = '';
