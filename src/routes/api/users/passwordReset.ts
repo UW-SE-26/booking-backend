@@ -1,13 +1,10 @@
-import { Request, Response, Router } from 'express';
+import { Request, Response } from 'express';
 import User from '../../../models/User';
 import argon2 from 'argon2';
 import sendEmail from '../../../util/email';
 import crypto from 'crypto';
-import bodyVerify from '../../../middleware/bodyVerify';
 
-const router = Router();
-
-const resetPasswordRoute = async (req: Request, res: Response) => {
+export async function resetPasswordRoute(req: Request, res: Response): Promise<void> {
     const user = await User.findOne({ email: req.body.email });
     if (user === null) {
         res.json({
@@ -20,20 +17,20 @@ const resetPasswordRoute = async (req: Request, res: Response) => {
     user.resetCode = emailCode;
     user.resetAt = Date.now();
 
-    user.save().then(() =>
-        sendEmail({
-            to: req.body.email,
-            subject: 'Reset your password',
-            text: `TODO here's your password reset code ${emailCode} if you didn't send this then disregard, why would someone try to hack an account that books study spaces`,
-        }).then(() => console.log(`Reset code sent to ${req.body.email}`))
-    );
+    await user.save();
+
+    sendEmail({
+        to: req.body.email,
+        subject: 'Reset your password',
+        text: `TODO here's your password reset code ${emailCode} if you didn't send this then disregard, why would someone try to hack an account that books study spaces`,
+    }).then(() => console.log(`Reset code sent to ${req.body.email}`));
 
     res.json({
         success: true,
     });
-};
+}
 
-const changePasswordRoute = async (req: Request, res: Response) => {
+export async function changePasswordRoute(req: Request, res: Response): Promise<void> {
     const user = await User.findOne({ email: req.body.email });
     if (user === null) {
         res.status(400).json({
@@ -69,9 +66,4 @@ const changePasswordRoute = async (req: Request, res: Response) => {
     res.json({
         success: true,
     });
-};
-
-router.post('/reset', bodyVerify(['email']), resetPasswordRoute);
-router.post('/change', bodyVerify(['email', 'password', 'code']), changePasswordRoute);
-
-export default router;
+}

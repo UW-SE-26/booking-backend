@@ -1,13 +1,10 @@
-import { Request, Response, Router } from 'express';
+import { Request, Response } from 'express';
 import User from '../../../models/User';
 import argon2 from 'argon2';
-import bodyverify from '../../../middleware/bodyVerify';
 import { SignJWT } from 'jose/jwt/sign';
 import { privateKey } from '../../../util/keypair';
 
-const router = Router();
-
-const loginRoute = async (req: Request, res: Response) => {
+const loginRoute = async (req: Request, res: Response): Promise<void> => {
     const user = await User.findOne({ email: req.body.email });
     if (user === null) {
         res.status(400).json({
@@ -44,6 +41,4 @@ const loginRoute = async (req: Request, res: Response) => {
     });
 };
 
-router.post('/', bodyverify(['email', 'password']), loginRoute);
-
-export default router;
+export default loginRoute;

@@ -1,10 +1,7 @@
-import { Request, Response, Router } from 'express';
+import { Request, Response } from 'express';
 import User from '../../../models/User';
-import bodyVerify from '../../../middleware/bodyVerify';
 
-const router = Router();
-
-const verifyRoute = async (req: Request, res: Response) => {
+const verifyRoute = async (req: Request, res: Response): Promise<void> => {
     const user = await User.findOne({ email: req.body.email });
     if (user === null) {
         res.status(400).json({
@@ -32,4 +29,4 @@ const verifyRoute = async (req: Request, res: Response) => {
     });
 };
 
-router.post('/', bodyVerify(['email', 'code']), verifyRoute);
+export default verifyRoute;
