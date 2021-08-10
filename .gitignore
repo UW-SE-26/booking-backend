@@ -55,3 +55,6 @@ web_modules/
 
 # typescript build
 build
+
+# generated encryption keys
+*.pem
