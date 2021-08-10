@@ -3,7 +3,7 @@ import Room from '../models/Room';
 
 export async function createRoom(req: Request, res: Response) {
     const { name, schedule, closed } = req.body;
-    if (typeof name !== 'string' && typeof closed !== 'boolean' && !Array.isArray(schedule)) {
+    if (typeof name !== 'string' || typeof closed !== 'boolean' || !Array.isArray(schedule)) {
         res.status(400).json({ err: 'validation failed' });
         return;
     }
