@@ -6,14 +6,20 @@ interface User {
     password: string;
     registeredAt: Date;
     verified: boolean;
+    emailCode: string;
+    resetCode: string;
+    resetAt: number;
 }
 
 const userSchema = new Schema<User>({
-    name: String,
+    name: { type: String, required: true },
     email: { type: String, required: true },
-    password: String,
+    password: { type: String, required: true },
     registeredAt: Date,
-    verified: Boolean,
+    verified: { type: Boolean, required: true },
+    emailCode: String,
+    resetCode: String,
+    resetAt: Number,
 });
 
 const userModel = model<User>('User', userSchema);
