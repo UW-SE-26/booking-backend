@@ -14,6 +14,7 @@ client.on('ready', () => {
     console.log(`Logged in as ${client.user!.tag}`);
 });
 
+//Temporary method to run commands until event handlers are created
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isCommand()) return;
 
