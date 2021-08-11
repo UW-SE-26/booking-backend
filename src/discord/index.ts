@@ -40,5 +40,6 @@ client.on('messageCreate', async (message) => {
         };
 
         await message.guild!.commands.create(data);
+        message.reply('Deploy command created! Do `/deploy` to deploy the remainder of the commands.');
     }
 });
