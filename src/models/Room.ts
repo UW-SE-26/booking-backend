@@ -1,22 +1,22 @@
 import { Schema, model } from 'mongoose';
-
-interface Schedule {
-    dateOfWeek: string;
-    start: string;
-    end: string;
-}
+import { Schedule } from './../types/Schedule';
 
 interface Room {
     name: string;
-    schedule: [Schedule];
     closed: boolean;
+    schedule: [Schedule];
 }
 
-const schedule = {} as Schedule;
 const roomSchema = new Schema<Room>({
     name: { type: String, required: true },
-    schedule: [schedule],
     closed: { type: Boolean, required: true },
+    schedule: [
+        {
+            dateOfWeek: String,
+            start: String,
+            end: String,
+        },
+    ],
 });
 
 const room = model<Room>('Room', roomSchema);

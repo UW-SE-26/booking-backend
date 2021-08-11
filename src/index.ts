@@ -2,7 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import apiRoutes from './routes/api';
-import roomRoutes from './routes/api/room';
+import roomRoutes from './routes/api/room/room';
 import { init as initDiscord } from './discord';
 
 dotenv.config();
