@@ -1,6 +1,6 @@
-import { Schema, model, ObjectId, Types, Document } from 'mongoose';
+import { Schema, model, ObjectId, Types } from 'mongoose';
 
-interface Section extends Document {
+interface Section {
     name: string;
     capacity: number;
     roomId: ObjectId;
