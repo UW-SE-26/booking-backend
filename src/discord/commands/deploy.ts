@@ -9,11 +9,11 @@ export default {
     async execute(interaction: CommandInteraction): Promise<void> {
         const data: ApplicationCommandData[] = [];
 
-        for (const command in commands) {
+        for (const command of commands) {
             data.push({
-                name: commands[command].name,
-                description: commands[command].description,
-                options: commands[command].options,
+                name: command.name,
+                description: command.description,
+                options: command.options,
             });
         }
 
