@@ -13,6 +13,7 @@ export function init(): void {
 
 function loadEvents(): void {
     for (const event of events) {
-        client.on(event.name, (argument) => event.execute(argument));
+        // @ts-expect-error: Spread operator doesn't seem to want to work with typescript?
+        client.on(event.name, (...arg) => event.execute(...arg));
     }
 }
