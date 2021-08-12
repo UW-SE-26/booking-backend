@@ -22,6 +22,7 @@ const registerRoute = async (req: Request, res: Response): Promise<void> => {
     const newUser = new User({
         name: req.body.name,
         email: req.body.email,
+        websiteUser: true,
         password: passwordHash,
         registeredAt: new Date(),
         verified: false,

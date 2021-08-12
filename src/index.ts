@@ -2,7 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import apiRoutes from './routes/api';
-import userRoutes from './routes/users';
+import userRoutes from './routes/api/users';
 import { init as initDiscord } from './discord';
 
 import './util/keypair'; //Make sure pub/priv keygen is done
