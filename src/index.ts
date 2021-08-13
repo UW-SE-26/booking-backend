@@ -2,7 +2,6 @@ import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import apiRoutes from './routes/api';
-import sectionRoutes from './routes/api/sections/querySection';
 
 import { init as initDiscord } from './discord';
 
