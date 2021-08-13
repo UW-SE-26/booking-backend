@@ -12,7 +12,7 @@ const querySection = async (req: Request, res: Response): Promise<void> => {
         return;
     }
 
-    // Retrieves all time blocks within the date range given in the input
+    // Retrieves all time blocks for the room section within the time range given in the input
     const sectionTimeblocks = await timeblockModel
     .find({
     sectionId: sectionInformation._id,
