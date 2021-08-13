@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import roomRoutes from '../api/room/room';
+import userRoutes from './users';
 
 const router = Router();
 
-router.use('/rooms', roomRoutes);
+router.use('/users', userRoutes);
 
 router.get('/', (req, res) => {
     res.send('Hello world!');
