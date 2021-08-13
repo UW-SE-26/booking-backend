@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import apiRoutes from './routes/api';
 import { init as initDiscord } from './discord';
 
+import './util/keypair'; //Make sure pub/priv keygen is done
+
 dotenv.config();
 
 mongoose
@@ -15,7 +17,6 @@ mongoose
     })
     .then(() => {
         console.log('Successfully connected to MongoDB database');
-    
         const app = express();
 
         app.use('/api', apiRoutes);
