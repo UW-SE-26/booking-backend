@@ -7,10 +7,10 @@ import bodyVerify from '../../middleware/bodyVerify';
 
 const router = Router();
 
-router.post('/users/login', bodyVerify(['email', 'password']), loginRoute);
-router.post('/users/register', bodyVerify(['name', 'email', 'password']), registerRoute);
-router.post('/users/verify', bodyVerify(['email', 'code']), verifyRoute);
-router.post('/users/resetPassword', bodyVerify(['email']), resetPasswordRoute);
-router.post('/users/changePassword', bodyVerify(['email', 'password', 'code']), changePasswordRoute);
+router.post('/login', bodyVerify(['email', 'password']), loginRoute);
+router.post('/register', bodyVerify(['name', 'email', 'password']), registerRoute);
+router.post('/verify', bodyVerify(['email', 'code']), verifyRoute);
+router.post('/resetPassword', bodyVerify(['email']), resetPasswordRoute);
+router.post('/changePassword', bodyVerify(['email', 'password', 'code']), changePasswordRoute);
 
 export default router;
