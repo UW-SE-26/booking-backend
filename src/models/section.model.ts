@@ -9,7 +9,7 @@ interface Section {
 const sectionSchema = new Schema<Section>({
     name: String,
     capacity: Number,
-    roomId: Types.ObjectId
+    roomId: Types.ObjectId,
 });
 
 const sectionModel = model<Section>('Section', sectionSchema);
