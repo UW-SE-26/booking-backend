@@ -1,6 +1,5 @@
 # SE Booking Backend Repo
 
-![format status](https://github.com/UW-SE-26/booking-backend/workflows/format/badge.svg)
 ![GitHub issues](https://img.shields.io/github/issues/UW-SE-26/booking-backend)
 ![GitHub contributors](https://img.shields.io/github/contributors/UW-SE-26/booking-backend)
 ![GitHub last commit](https://img.shields.io/github/last-commit/UW-SE-26/booking-backend)
