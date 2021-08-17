@@ -3,17 +3,33 @@ import { Schema, model } from 'mongoose';
 interface User {
     name: string;
     email: string;
+    websiteUser: boolean;
     password: string;
     registeredAt: Date;
     verified: boolean;
+    emailCode: string;
+    resetCode: string;
+    resetAt: number;
 }
 
 const userSchema = new Schema<User>({
-    name: String,
     email: { type: String, required: true },
+    websiteUser: { type: Boolean, required: true },
+    /*
+    Whether the account is a website (true) or discord user (false).
+    If this property is true, the following fields
+    are required and can be assumed to be present
+    */
+    name: String,
     password: String,
     registeredAt: Date,
     verified: Boolean,
+    emailCode: String,
+    /*
+    These fields are used for password resets and are not guaranteed to be present
+     */
+    resetCode: String,
+    resetAt: Number,
 });
 
 const userModel = model<User>('User', userSchema);
