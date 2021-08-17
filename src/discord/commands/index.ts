@@ -1,4 +1,5 @@
 import Ping from './ping';
 import Deploy from './deploy';
+import Rooms from './rooms';
 
-export default [Ping, Deploy];
+export default [Deploy, Rooms, Ping];
