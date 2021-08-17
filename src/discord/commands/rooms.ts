@@ -3,14 +3,14 @@ import { Types } from 'mongoose';
 import Room from '../../models/Room';
 import Section from '../../models/section.model';
 
-async function retrieveRooms(seletedRoomId: string) {
+async function retrieveRooms(seletedRoomId?: string) {
     const rooms = [];
     const roomsJson = await Room.find({});
 
     for (const room of roomsJson) {
         if (!room.closed) {
             rooms.push({
-                label: room.name,
+                label: room.name !== undefined ? room.name : `Room ${String(room._id)}`,
                 value: String(room._id),
                 default: String(room._id) === seletedRoomId ? true : false,
             });
@@ -48,7 +48,7 @@ export default {
             new MessageSelectMenu()
                 .setCustomId('roomSelectMenu')
                 .setPlaceholder('Select a Room to Book!')
-                .addOptions(await retrieveRooms(''))
+                .addOptions(await retrieveRooms())
         );
         interaction.reply({ embeds: [embed], components: [selectMenu], ephemeral: true });
     },
