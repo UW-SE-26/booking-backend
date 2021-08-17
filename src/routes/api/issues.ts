@@ -14,13 +14,13 @@ createIssueRoute.post('/create', async (request, response) => {
 
     if (room === null) {
         //if the room isn't valid / isn't found in database
-        response.status(422).json({ error: "That room doesn't exist, or it's inputted correctly." });
+        response.status(422).json({ error: "That room doesn't exist, or was inputted incorrectly." });
         return;
     } else {
         //if the room is valid
         if (section === null) {
             //if the room's section isn't valid / isn't found in database
-            response.status(422).json({ error: "That section doesn't exist, or it's inputted correctly." });
+            response.status(422).json({ error: "That section doesn't exist, or was inputted incorrectly." });
             return;
         } else {
             //if the section is valid
@@ -42,10 +42,10 @@ createIssueRoute.post('/create', async (request, response) => {
     }
 
     const issue = new issueModel({
-        //reportingUserId =
+        //reportingUserId = ***WAITING FOR AUTH
         timestamp: ts,
         message: message,
-        stauts: 'Unresolved',
+        status: 'Unresolved',
         roomId: roomId,
         sectionId: sectionId,
     });
@@ -60,7 +60,6 @@ createIssueRoute.post('/create', async (request, response) => {
     //check if sections room ID is equal/valid
     //tur timestamp into date with date.parse (date obj for database)
     //when issue's created, make status unresolved
-    //
 });
 
 export default createIssueRoute;
