@@ -1,5 +1,5 @@
 export interface Schedule {
-    dateOfWeek: string;
-    start: string;
-    end: string;
+    dateOfWeek: number;
+    start: number;
+    end: number;
 }
