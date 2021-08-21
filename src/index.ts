@@ -7,6 +7,7 @@ import { JWTPayload } from 'jose/webcrypto/types';
 
 import './util/keypair'; //Make sure pub/priv keygen is done
 
+// Merged declaration of Request
 declare module 'express-serve-static-core' {
     interface Request {
         payload: JWTPayload;
