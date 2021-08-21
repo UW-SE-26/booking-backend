@@ -16,7 +16,9 @@ const querySection = async (req: Request, res: Response): Promise<void> => {
         }
 
         if (startsAt && endsAt) {
-            if (typeof startsAt != 'string' || typeof endsAt != 'string') {
+            const start = new Date(startsAt as string);
+            const end = new Date(endsAt as string);
+            if (start === null || end === null) {
                 res.status(400).json({ error: 'validation failed, variable types are incorrect' });
                 return;
             } else {
@@ -24,8 +26,8 @@ const querySection = async (req: Request, res: Response): Promise<void> => {
                 const sectionTimeblocks = await timeblockModel
                     .find({
                         sectionId: sectionInformation._id,
-                        startsAt: { $gte: new Date(startsAt) },
-                        endsAt: { $lte: new Date(endsAt) },
+                        startsAt: { $gte: start },
+                        endsAt: { $lte: end },
                     })
                     .catch((error) => {
                         res.status(404).json({ error });
