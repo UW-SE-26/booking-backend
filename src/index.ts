@@ -2,9 +2,17 @@ import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import apiRoutes from './routes/api';
+import { JWTPayload } from 'jose/webcrypto/types';
 import { init as initDiscord } from './discord';
 
 import './util/keypair'; //Make sure pub/priv keygen is done
+
+declare module 'express-serve-static-core' {
+    interface Request {
+        payload: JWTPayload;
+        userEmail: string;
+    }
+}
 
 dotenv.config();
 

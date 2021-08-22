@@ -19,12 +19,12 @@ const loginRoute = async (req: Request, res: Response): Promise<void> => {
         });
         return;
     }
-    if (!user.verified) {
+    /*if (!user.verified) {
         res.status(403).json({
             error: 'Account not verified',
         });
         return;
-    }
+    }*/
 
     const jwt = await new SignJWT({})
         .setProtectedHeader({
