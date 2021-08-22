@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { publicKey } from '../../util/keypair';
+import { publicKey } from '../util/keypair';
 import { jwtVerify } from 'jose/jwt/verify';
 
 const authMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
