@@ -5,7 +5,10 @@
     "repository": "https://github.com/UW-SE-26/booking-backend.git",
     "scripts": {
         "start": "tsc && node build/index.js",
-        "postinstall": "husky install"
+        "postinstall": "husky install",
+        "lint:eslint": "eslint --ext .ts src",
+        "lint:prettier": "prettier --check \"src/**/*.ts\"",
+        "format": "prettier --write \"src/**/*.ts\""
     },
     "devDependencies": {
         "@types/express": "^4.17.13",

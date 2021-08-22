@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import User from '../../../models/User';
 import argon2 from 'argon2';
 import crypto from 'crypto';
-//import sendEmail from '../../../util/email';
+// import sendEmail from '../../../util/email';
 
 const registerRoute = async (req: Request, res: Response): Promise<void> => {
     const user = await User.findOne({ email: req.body.email });
@@ -15,7 +15,7 @@ const registerRoute = async (req: Request, res: Response): Promise<void> => {
     const passwordHash = await argon2.hash(req.body.password, {
         type: argon2.argon2id,
         parallelism: 16,
-        timeCost: 2,
+        timeCost: 2, // must be between 2 and 4294967295, value 1 will raise an error
     });
 
     const emailCode = crypto.randomBytes(64).toString('hex');
@@ -33,12 +33,14 @@ const registerRoute = async (req: Request, res: Response): Promise<void> => {
 
     console.log(`User ${req.body.email} registered`);
 
-    /*sendEmail({
+    // Temporarily disabled email service
+    // Will be added after email verification is set up
+    /* sendEmail({
         to: req.body.email,
         subject: 'Verify SE Spaces Booking Email Address',
         text: `TODO your code is ${emailCode} this should be a frontend link here`,
-    }).then(() => console.log(`Verification email sent to ${req.body.email}`));
-    */
+    }).then(() => console.log(`Verification email sent to ${req.body.email}`)); */
+
     res.json({
         success: true,
     });

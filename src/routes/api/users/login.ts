@@ -19,12 +19,14 @@ const loginRoute = async (req: Request, res: Response): Promise<void> => {
         });
         return;
     }
-    /*if (!user.verified) {
+    // Temporarily disabled verification check
+    // Will be added after email verification is set up
+    /* if (!user.verified) {
         res.status(403).json({
             error: 'Account not verified',
         });
         return;
-    }*/
+    } */
 
     const jwt = await new SignJWT({})
         .setProtectedHeader({
