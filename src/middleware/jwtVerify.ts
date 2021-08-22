@@ -1,9 +1,8 @@
-import { Response, NextFunction } from 'express';
-import { publicKey } from '../../util/keypair';
+import { Request, Response, NextFunction } from 'express';
+import { publicKey } from '../util/keypair';
 import { jwtVerify } from 'jose/jwt/verify';
-import RequestAuth from './RequestAuth';
 
-const authMiddleware = async (req: RequestAuth, res: Response, next: NextFunction): Promise<void> => {
+const authMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     if (!req.headers.authorization || !(req.headers.authorization as string).toLowerCase().startsWith('bearer ')) {
         res.status(400).json({
             error: 'Missing bearer token',
