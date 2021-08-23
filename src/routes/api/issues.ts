@@ -63,10 +63,6 @@ const issueRoute = async (request: Request, response: Response): Promise<void> =
     }
 
     response.status(201).json({ issue });
-
-    //check if sections room ID is equal/valid
-    //tur timestamp into date with date.parse (date obj for database)
-    //when issue's created, make status unresolved
 };
 
 createIssueRoute.post('/create', authMiddleware, issueRoute);
