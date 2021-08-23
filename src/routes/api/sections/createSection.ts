@@ -15,7 +15,7 @@ const createSectionRoute = async (req: Request, res: Response): Promise<void> =>
     const section = new Section({
         name,
         capacity,
-        roomId: roomObjectId
+        roomId: roomObjectId,
     });
 
     // Retrieve the room with the room id and push the section id into the list of section ids

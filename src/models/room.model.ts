@@ -19,7 +19,7 @@ const roomSchema = new Schema<Room>({
             // Number from 0-23 representing the hour on the dayOfWeek that the room opens in ET
             start: Number,
             // Number from 0-23 representing the hour of the dayOfWeek that the room closes in ET
-            end: Number
+            end: Number,
         },
     ],
 });

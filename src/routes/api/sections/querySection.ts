@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import sectionModel from '../../../models/section.model';
-import timeblockModel from '../../../models/timeblock.model';
+import timeBlockModel from '../../../models/timeBlock.model';
 import Room from '../../../models/room.model';
 import { DateTime } from 'luxon';
 
@@ -24,8 +24,8 @@ const querySection = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        const start = DateTime.fromISO(String(startsAt), {zone: 'America/Toronto'});
-        const end = DateTime.fromISO(String(endsAt), {zone: 'America/Toronto'});
+        const start = DateTime.fromISO(String(startsAt), { zone: 'America/Toronto' });
+        const end = DateTime.fromISO(String(endsAt), { zone: 'America/Toronto' });
 
         // Checks that the given time range does not exceed 31 days
         const range = end.toMillis() - start.toMillis();
@@ -45,28 +45,28 @@ const querySection = async (req: Request, res: Response): Promise<void> => {
                 return;
             });
 
-            if(!room) {
+            if (!room) {
                 res.status(404);
                 return;
             }
-            
+
             let currHourStart = start;
-            let currHourEnd = currHourStart.plus({ hours: 1});
+            let currHourEnd = currHourStart.plus({ hours: 1 });
 
             // Finds and stores all booked time blocks within the given time range
-            const bookedTimeblocks = await timeblockModel.
-            find({
-                sectionId: sectionInformation._id,
-                startsAt: { $gte: start.toJSDate() },
-                endsAt:  { $lte: end.toJSDate() }
-            })
-            .catch((error) => {
-                res.status(500).json({ error });
-                return [];
-            });
+            const bookedTimeBlocks = await timeBlockModel
+                .find({
+                    sectionId: sectionInformation._id,
+                    startsAt: { $gte: start.toJSDate() },
+                    endsAt: { $lte: end.toJSDate() },
+                })
+                .catch((error) => {
+                    res.status(500).json({ error });
+                    return [];
+                });
 
-            const timeblocks = [];
-            
+            const timeBlocks = [];
+
             // Iterate through the hours in the given time range
             while (currHourStart < end) {
                 // Finds schedule start and end for the day that the current hour falls on
@@ -79,38 +79,32 @@ const querySection = async (req: Request, res: Response): Promise<void> => {
                         scheduleDayEnd = day.end;
                     }
                 }
-                
+
                 // Checks if the hour falls under an open time for the room and if it does adds hour to the list of available times
-                if (!room.closed && (currHourStart.weekday == currHourEnd.weekday) && (currHourStart.hour >= scheduleDayStart && currHourEnd.hour <= scheduleDayEnd)) {
-                    // Check for timeblock in database
-                    let bookedTimeblockFound;
-                    for (const bookedTimeblock of bookedTimeblocks) {
-                        const bookedTimeblockDateTime = DateTime.fromJSDate(bookedTimeblock.startsAt, {zone: 'America/Toronto'});
-                        if (bookedTimeblockDateTime.toMillis() == currHourStart.toMillis())  {
-                            bookedTimeblockFound = bookedTimeblock;
-                        }
-                    }
-                    
-                    if (bookedTimeblockFound) {
-                        const newTimeblock = {
+                if (!room.closed && currHourStart.weekday == currHourEnd.weekday && currHourStart.hour >= scheduleDayStart && currHourEnd.hour <= scheduleDayEnd) {
+                    // Check for time block in database
+                    const bookedTimeBlockFound = bookedTimeBlocks.find((bookedTimeBlock) => bookedTimeBlock.startsAt.getTime() === currHourStart.toMillis());
+
+                    if (bookedTimeBlockFound) {
+                        const newTimeBlock = {
                             startsAt: currHourStart.toJSDate(),
                             endsAt: currHourEnd.toJSDate(),
-                            availableCapacity: sectionInformation.capacity - bookedTimeblockFound.users.length
-                        }
-                        timeblocks.push(newTimeblock);
+                            availableCapacity: sectionInformation.capacity - bookedTimeBlockFound.users.length,
+                        };
+                        timeBlocks.push(newTimeBlock);
                     } else {
-                        const newTimeblock = {
+                        const newTimeBlock = {
                             startsAt: currHourStart.toJSDate(),
                             endsAt: currHourEnd.toJSDate(),
-                            availableCapacity: sectionInformation.capacity
-                        }
-                        timeblocks.push(newTimeblock);
+                            availableCapacity: sectionInformation.capacity,
+                        };
+                        timeBlocks.push(newTimeBlock);
                     }
                 }
 
                 // Increments hour start and end for next iteration
                 currHourStart = currHourStart.plus({ hours: 1 });
-                currHourEnd = currHourEnd.plus({ hours: 1 })
+                currHourEnd = currHourEnd.plus({ hours: 1 });
             }
 
             // Sends response with section information and the array of available times in the time range given
@@ -118,7 +112,7 @@ const querySection = async (req: Request, res: Response): Promise<void> => {
                 id: sectionInformation._id,
                 name: sectionInformation.name,
                 capacity: sectionInformation.capacity,
-                availableTimes: timeblocks,
+                availableTimes: timeBlocks,
             };
             res.status(201).json(section);
         }

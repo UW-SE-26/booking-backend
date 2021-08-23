@@ -1,23 +1,23 @@
 import { Schema, model, ObjectId, Types } from 'mongoose';
 
-interface Timeblock {
-    // Users that are signed up for timeblock
+interface TimeBlock {
+    // Users that are signed up for time block
     users: [ObjectId];
-    // Id of the room section that the timeblock corresponds to
+    // Id of the room section that the time block corresponds to
     sectionId: ObjectId;
     startsAt: Date;
     endsAt: Date;
 }
 
-const timeblockSchema = new Schema<Timeblock>({
-    // Users that are signed up for timeblock
+const timeBlockSchema = new Schema<TimeBlock>({
+    // Users that are signed up for time block
     users: [Types.ObjectId],
-    // Id of the room section that the timeblock corresponds to
+    // Id of the room section that the time block corresponds to
     sectionId: Types.ObjectId,
     startsAt: Date,
     endsAt: Date,
 });
 
-const TimeblockModel = model<Timeblock>('Timeblock', timeblockSchema);
+const TimeBlockModel = model<TimeBlock>('TimeBlock', timeBlockSchema);
 
-export default TimeblockModel;
+export default TimeBlockModel;
