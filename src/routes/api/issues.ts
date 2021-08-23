@@ -8,7 +8,6 @@ import userModel from '../../models/User';
 const createIssueRoute = Router();
 
 const issueRoute = async (request: Request, response: Response): Promise<void> => {
-    console.log(request.body); //displaying body so i can see in testing
     const { timestamp, message, roomId, sectionId } = request.body;
     const room = await roomModel.findById(roomId); //parsing for room id
     const section = await sectionModel.find({ sections: sectionId }); //parsing for room id
