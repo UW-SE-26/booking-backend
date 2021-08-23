@@ -1,7 +1,12 @@
 import { Request, Response } from 'express';
 import Room from '../../../models/Room';
 
+/**
+ * Route to create a room
+ * @author Kevin Wang
+ */
 const createRoomRoute = async (req: Request, res: Response): Promise<void> => {
+    // Get data from request and validate data
     const { name, schedule, closed } = req.body;
     if (typeof name !== 'string' || typeof closed !== 'boolean' || !Array.isArray(schedule)) {
         res.status(400).json({ error: 'validation failed, variable types are incorrect' });
@@ -16,6 +21,8 @@ const createRoomRoute = async (req: Request, res: Response): Promise<void> => {
             }
         }
     }
+
+    // Create room and save in the database
     const room = new Room({
         name,
         schedule,
