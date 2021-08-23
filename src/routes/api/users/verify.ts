@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import User from '../../../models/User';
+import User from '../../../models/user.model';
 
 const verifyRoute = async (req: Request, res: Response): Promise<void> => {
     const user = await User.findOne({ email: req.body.email });

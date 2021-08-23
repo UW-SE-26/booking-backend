@@ -1,12 +1,13 @@
 import { Request, Response } from 'express';
 import { Types } from 'mongoose';
 import Section from '../../../models/section.model';
-import Room from '../../../models/Room';
+import Room from '../../../models/room.model';
 
 /**
  * Route to create a section
  * @author Kevin Wang
  */
+
 const createSectionRoute = async (req: Request, res: Response): Promise<void> => {
     // Get data from request and create section
     const { name, capacity, roomId } = req.body;
@@ -14,7 +15,7 @@ const createSectionRoute = async (req: Request, res: Response): Promise<void> =>
     const section = new Section({
         name,
         capacity,
-        roomObjectId,
+        roomId: roomObjectId,
     });
 
     // Retrieve the room with the room id and push the section id into the list of section ids

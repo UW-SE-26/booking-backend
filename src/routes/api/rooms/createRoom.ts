@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import Room from '../../../models/Room';
+import Room from '../../../models/room.model';
 
 /**
  * Route to create a room
@@ -13,7 +13,7 @@ const createRoomRoute = async (req: Request, res: Response): Promise<void> => {
         return;
     }
     for (const day of schedule) {
-        const expectedKeys = ['dateOfWeek', 'start', 'end'];
+        const expectedKeys = ['dayOfWeek', 'start', 'end'];
         for (const key in day) {
             if (!expectedKeys.includes(key)) {
                 res.status(400).json({ error: 'validation failed, schedule is formatted incorrectly' });
