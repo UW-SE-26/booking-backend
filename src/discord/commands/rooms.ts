@@ -1,6 +1,6 @@
 import { CommandInteraction, MessageActionRow, MessageEmbed, MessageSelectMenu, MessageButton, SelectMenuInteraction } from 'discord.js';
 import { Types } from 'mongoose';
-import Room from '../../models/Room';
+import Room from '../../models/room.model';
 import Section from '../../models/section.model';
 
 async function retrieveRooms(seletedRoomId?: string) {

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import sectionModel from '../../../models/section.model';
 import timeblockModel from '../../../models/timeblock.model';
-import Room from '../../../models/Room';
+import Room from '../../../models/room.model';
 import { DateTime } from 'luxon';
 
 /**
@@ -26,6 +26,14 @@ const querySection = async (req: Request, res: Response): Promise<void> => {
 
         const start = DateTime.fromISO(String(startsAt), {zone: 'America/Toronto'});
         const end = DateTime.fromISO(String(endsAt), {zone: 'America/Toronto'});
+
+        // Checks that the given time range does not exceed 31 days
+        const range = end.toMillis() - start.toMillis();
+        if (range > 2678400000) {
+            res.status(400).json({ error: 'time range is greater than 31 days' });
+            return;
+        }
+
         // Validates start and end dates
         if (start === null || end === null) {
             res.status(400).json({ error: 'validation failed, variable types are incorrect' });
@@ -43,8 +51,19 @@ const querySection = async (req: Request, res: Response): Promise<void> => {
             }
             
             let currHourStart = start;
-            let currHourEnd = currHourStart;
-            currHourEnd = currHourEnd.plus({ hours: 1});
+            let currHourEnd = currHourStart.plus({ hours: 1});
+
+            // Finds and stores all booked time blocks within the given time range
+            const bookedTimeblocks = await timeblockModel.
+            find({
+                sectionId: sectionInformation._id,
+                startsAt: { $gte: start.toJSDate() },
+                endsAt:  { $lte: end.toJSDate() }
+            })
+            .catch((error) => {
+                res.status(500).json({ error });
+                return [];
+            });
 
             const timeblocks = [];
             
@@ -55,7 +74,7 @@ const querySection = async (req: Request, res: Response): Promise<void> => {
                 let scheduleDayStart = 0;
                 let scheduleDayEnd = 0;
                 for (const day of room.schedule) {
-                    if (day.dateOfWeek == currWeekDay) {
+                    if (day.dayOfWeek == currWeekDay) {
                         scheduleDayStart = day.start;
                         scheduleDayEnd = day.end;
                     }
@@ -64,22 +83,19 @@ const querySection = async (req: Request, res: Response): Promise<void> => {
                 // Checks if the hour falls under an open time for the room and if it does adds hour to the list of available times
                 if (!room.closed && (currHourStart.weekday == currHourEnd.weekday) && (currHourStart.hour >= scheduleDayStart && currHourEnd.hour <= scheduleDayEnd)) {
                     // Check for timeblock in database
-                    const bookedTimeblock = await timeblockModel
-                    .findOne({
-                        sectionId: sectionInformation._id,
-                        startsAt: currHourStart.toJSDate(),
-                        endsAt: currHourEnd.toJSDate()
-                    })
-                    .catch((error) => {
-                        res.status(404).json({ error });
-                        return;
-                    });
-
-                    if (bookedTimeblock) {
+                    let bookedTimeblockFound;
+                    for (const bookedTimeblock of bookedTimeblocks) {
+                        const bookedTimeblockDateTime = DateTime.fromJSDate(bookedTimeblock.startsAt, {zone: 'America/Toronto'});
+                        if (bookedTimeblockDateTime.toMillis() == currHourStart.toMillis())  {
+                            bookedTimeblockFound = bookedTimeblock;
+                        }
+                    }
+                    
+                    if (bookedTimeblockFound) {
                         const newTimeblock = {
                             startsAt: currHourStart.toJSDate(),
                             endsAt: currHourEnd.toJSDate(),
-                            availableCapacity: sectionInformation.capacity - bookedTimeblock.users.length
+                            availableCapacity: sectionInformation.capacity - bookedTimeblockFound.users.length
                         }
                         timeblocks.push(newTimeblock);
                     } else {

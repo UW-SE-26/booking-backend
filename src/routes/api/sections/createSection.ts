@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { Types } from 'mongoose';
 import Section from '../../../models/section.model';
-import Room from '../../../models/Room';
+import Room from '../../../models/room.model';
 
 /**
  * Route to create a section
