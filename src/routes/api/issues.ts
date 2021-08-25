@@ -1,9 +1,9 @@
 import { Router, Response, Request } from 'express';
 import authMiddleware from '../../middleware/jwtVerify';
-import roomModel from '../../models/Room';
+import roomModel from '../../models/room.model';
 import sectionModel from '../../models/section.model';
 import issueModel from '../../models/issue.model';
-import userModel from '../../models/User';
+import userModel from '../../models/user.model';
 
 const createIssueRoute = Router();
 
