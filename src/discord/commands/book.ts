@@ -68,6 +68,8 @@ async function parseCommandOptions(interaction: CommandInteraction): Promise<str
 }
 
 async function searchTimeblocks(selectedDate: string, sectionInformation: sectionInformation, roomInformation: Room) {
+    //Function finds all available timeblocks for a given date
+
     const currentDate = new Date();
     let nextHour = '00';
 
@@ -135,6 +137,7 @@ async function searchTimeblocks(selectedDate: string, sectionInformation: sectio
 }
 
 function timeConversion(timeObject: Date) {
+    //Converts 24 hour time to 12 hour time with a.m. and p.m. and changes 0:00 to 12:00
     let convertedTime = timeObject.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
     if (convertedTime[0] === '0') {
         convertedTime = `12${convertedTime.substring(1)}`;
@@ -143,6 +146,7 @@ function timeConversion(timeObject: Date) {
 }
 
 function parseTimeblocks(timeBlocks: TimeblockInformation[]) {
+    //Sets up select menu options for timeblocks
     const timeBlockOptions = [];
     for (const timeBlock of timeBlocks) {
         timeBlockOptions.push({
