@@ -1,7 +1,8 @@
-import { CommandInteraction, MessageActionRow, MessageEmbed, MessageSelectMenu, MessageButton, SelectMenuInteraction } from 'discord.js';
+import { CommandInteraction, MessageActionRow, MessageEmbed, MessageSelectMenu, MessageButton, SelectMenuInteraction, ButtonInteraction, Message } from 'discord.js';
 import { Types } from 'mongoose';
 import Room from '../../models/room.model';
 import Section from '../../models/section.model';
+import bookCommand from '../../discord/commands/book';
 
 async function retrieveRooms(seletedRoomId?: string) {
     const rooms = [];
@@ -25,7 +26,7 @@ async function retrieveSections(selectedRoomId: string) {
     const sectionJson = await Section.find({ roomId: Types.ObjectId(selectedRoomId) });
 
     for (const section of sectionJson) {
-        sectionArray.push(new MessageButton().setCustomId(section.name).setLabel(section.name).setStyle('PRIMARY'));
+        sectionArray.push(new MessageButton().setCustomId(String(section._id)).setLabel(section.name).setStyle('PRIMARY'));
     }
 
     if (sectionArray.length === 0) {
@@ -50,12 +51,28 @@ export default {
                 .setPlaceholder('Select a Room to Book!')
                 .addOptions(await retrieveRooms())
         );
-        interaction.reply({ embeds: [embed], components: [selectMenu], ephemeral: true });
-    },
 
-    async updateReply(interaction: SelectMenuInteraction): Promise<void> {
-        const sectionButtons = new MessageActionRow().addComponents(await retrieveSections(interaction.values[0]));
-        const selectMenu = new MessageActionRow().addComponents(new MessageSelectMenu().setCustomId('roomSelectMenu').addOptions(await retrieveRooms(interaction.values[0])));
-        interaction.update({ components: [selectMenu, sectionButtons] });
+        const message = (await interaction.reply({ embeds: [embed], components: [selectMenu], ephemeral: false, fetchReply: true })) as Message;
+
+        const selectMenuCollector = message.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 120000 });
+        const buttonCollector = message.createMessageComponentCollector({ componentType: 'BUTTON', time: 120000 });
+        let selectedroomId: string;
+
+        selectMenuCollector.on('collect', async (menuInteraction: SelectMenuInteraction) => {
+            selectedroomId = menuInteraction.values[0];
+
+            const sectionButtons = new MessageActionRow().addComponents(await retrieveSections(selectedroomId));
+            const selectMenu = new MessageActionRow().addComponents(new MessageSelectMenu().setCustomId('roomSelectMenu').addOptions(await retrieveRooms(selectedroomId)));
+
+            menuInteraction.update({ components: [selectMenu, sectionButtons] });
+        });
+
+        buttonCollector.on('collect', async (buttonInteraction: ButtonInteraction) => {
+            selectMenuCollector.stop();
+            buttonCollector.stop();
+
+            bookCommand.execute(buttonInteraction, selectedroomId, buttonInteraction.customId);
+            await interaction.deleteReply();
+        });
     },
 };
