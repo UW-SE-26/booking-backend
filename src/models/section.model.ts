@@ -1,6 +1,6 @@
 import { Schema, model, Types } from 'mongoose';
 
-interface Section {
+export interface Section {
     name: string;
     capacity: number;
     // Id of the room that the section corresponds to

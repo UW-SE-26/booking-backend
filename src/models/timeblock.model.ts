@@ -4,7 +4,7 @@ interface TimeBlock {
     // Users that are signed up for time block
     users: [ObjectId];
     // Id of the room section that the time block corresponds to
-    sectionId: ObjectId;
+    sectionId: Types.ObjectId;
     startsAt: Date;
     endsAt: Date;
 }
