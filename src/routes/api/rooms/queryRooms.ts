@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import Room from '../../../models/room.model';
-import Section from '../../../models/section.model';
 
 /**
  * Route to query all sections or individual section
