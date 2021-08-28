@@ -41,4 +41,6 @@ mongoose
         console.log(`Failed to connect to MongoDB database: ${e}`);
     });
 
-initDiscord();
+if (process.env.ENABLE_DISCORD_BOT === 'true' && process.env.DISCORD_TOKEN !== undefined) {
+    initDiscord();
+}
