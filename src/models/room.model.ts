@@ -5,6 +5,7 @@ interface Room {
     name: string;
     closed: boolean;
     sections: [Types.ObjectId];
+    issues: [Types.ObjectId];
     schedule: [Schedule];
 }
 
@@ -12,6 +13,7 @@ const roomSchema = new Schema<Room>({
     name: { type: String, required: true },
     closed: { type: Boolean, required: true },
     sections: [{ type: Types.ObjectId, ref: 'Section' }],
+    issues: [{ type: Types.ObjectId, ref: 'Issue' }],
     schedule: [
         {
             // Number from 0-6 representing the week day where Sunday = 0, Monday = 1 ... Saturday = 6
