@@ -11,7 +11,7 @@ interface TimeblockInformation {
     availableCapacity: number;
 }
 
-interface sectionInformation extends Section {
+interface SectionInformation extends Section {
     _id?: Types.ObjectId;
 }
 
@@ -30,18 +30,16 @@ function dateSuffix(day: number) {
 }
 
 function getDateOptions(selectedDate?: string) {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const dateOptions = [];
-    const date = new Date();
+    let currentDate = DateTime.now().setZone('America/Toronto');
 
     for (let i = 0; i < 14; i++) {
         dateOptions.push({
-            label: `${days[date.getDay()]} - ${months[date.getMonth()]} ${date.getDate()}${dateSuffix(date.getDate())}`,
-            value: date.toLocaleDateString().split('/').reverse().join('-'),
-            default: date.toLocaleDateString().split('/').reverse().join('-') === selectedDate ? true : false,
+            label: `${currentDate.weekdayLong} - ${currentDate.monthLong} ${currentDate.day}${dateSuffix(currentDate.day)}`,
+            value: currentDate.toISODate(),
+            default: currentDate.toISODate() === selectedDate ? true : false,
         });
-        date.setDate(date.getDate() + 1);
+        currentDate = currentDate.plus({ days: 1 });
     }
     return dateOptions;
 }
@@ -64,17 +62,17 @@ async function parseCommandOptions(interaction: CommandInteraction): Promise<str
         return undefined;
     }
 
-    return [roomJson._id, specificSection?._id];
+    return [roomJson._id, specificSection._id];
 }
 
-async function searchTimeblocks(selectedDate: string, sectionInformation: sectionInformation, roomInformation: Room) {
+async function searchTimeblocks(selectedDate: string, sectionInformation: SectionInformation, roomInformation: Room) {
     //Function finds all available timeblocks for a given date
 
-    const currentDate = new Date();
+    const currentDate = DateTime.now().setZone('America/Toronto');
     let nextHour = '00';
 
-    if (currentDate.toLocaleDateString().split('/').reverse().join('-') === selectedDate) {
-        nextHour = String(currentDate.getHours() + 1);
+    if (currentDate.toISODate() === selectedDate) {
+        nextHour = String(currentDate.hour + 1);
 
         if (nextHour.length === 1) {
             nextHour = `0${nextHour}`;
@@ -138,11 +136,11 @@ async function searchTimeblocks(selectedDate: string, sectionInformation: sectio
 
 function timeConversion(timeObject: Date) {
     //Converts 24 hour time to 12 hour time with a.m. and p.m. and changes 0:00 to 12:00
-    let convertedTime = timeObject.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
-    if (convertedTime[0] === '0') {
-        convertedTime = `12${convertedTime.substring(1)}`;
-    }
-    return convertedTime;
+    const currentHour = DateTime.fromJSDate(timeObject).hour;
+    const convertedTime = currentHour % 12 || 12;
+    const suffix = currentHour < 12 ? 'am' : 'pm';
+
+    return `${convertedTime}:00 ${suffix}`;
 }
 
 function parseTimeblocks(timeBlocks: TimeblockInformation[]) {
