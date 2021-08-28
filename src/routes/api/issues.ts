@@ -13,7 +13,7 @@ const issueRoute = async (request: Request, response: Response): Promise<void> =
     const section = await sectionModel.find({ sections: sectionId }); //parsing for room id
     const ts = Date.parse(timestamp); //parsing timestamp to store and convert / check if proper date type
     const user = await userModel.findOne({ email: request.userEmail });
-    
+
     //if the room is valid
     if (section === null) {
         //if the room's section isn't valid / isn't found in database
