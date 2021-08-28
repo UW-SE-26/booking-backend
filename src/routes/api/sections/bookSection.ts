@@ -64,23 +64,23 @@ const bookSectionRoute = async (req: Request, res: Response): Promise<void> => {
 
         // Query a time block for the current hour
         const bookingTimeBlock = await timeBlockModel
-        .findOne({
-            sectionId: sectionInformation._id,
-            startsAt: currHourStart.toJSDate(),
-            endsAt: currHourEnd.toJSDate()
-        })
-        .catch((error) => {
-            res.status(500).json({ error });
-            return;
-        });
-    
+            .findOne({
+                sectionId: sectionInformation._id,
+                startsAt: currHourStart.toJSDate(),
+                endsAt: currHourEnd.toJSDate(),
+            })
+            .catch((error) => {
+                res.status(500).json({ error });
+                return;
+            });
+
         if (!bookingTimeBlock) {
             // If a time block for the current hour does not exist
             // Check if the amount of users will exceed to the section capacity
             if (emails.length > sectionInformation.capacity) {
                 overCapacity = true;
                 break;
-            } 
+            }
         } else {
             // If a time block for the current hour does exist
             // Check if the amount of users already booked plus the new users will exceed to the section capacity
@@ -101,8 +101,8 @@ const bookSectionRoute = async (req: Request, res: Response): Promise<void> => {
         const response = {
             sectionId: id,
             success: false,
-            message: "booking unsuccessful, times do not fall under open room hours"
-        }
+            message: 'booking unsuccessful, times do not fall under open room hours',
+        };
         res.status(200).json(response);
         return;
     }
@@ -110,8 +110,8 @@ const bookSectionRoute = async (req: Request, res: Response): Promise<void> => {
         const response = {
             sectionId: id,
             success: false,
-            message: "booking unsuccessful, more users than available spots"
-        }
+            message: 'booking unsuccessful, more users than available spots',
+        };
         res.status(200).json(response);
         return;
     }
@@ -122,15 +122,15 @@ const bookSectionRoute = async (req: Request, res: Response): Promise<void> => {
     while (currHourStart < end) {
         // Query a time block for the current hour
         const bookingTimeBlock = await timeBlockModel
-        .findOne({
-            sectionId: sectionInformation._id,
-            startsAt: currHourStart.toJSDate(),
-            endsAt: currHourEnd.toJSDate()
-        })
-        .catch((error) => {
-            res.status(500).json({ error });
-            return;
-        });
+            .findOne({
+                sectionId: sectionInformation._id,
+                startsAt: currHourStart.toJSDate(),
+                endsAt: currHourEnd.toJSDate(),
+            })
+            .catch((error) => {
+                res.status(500).json({ error });
+                return;
+            });
 
         if (!bookingTimeBlock) {
             // If a time block for the current hour does not exist
@@ -139,13 +139,13 @@ const bookSectionRoute = async (req: Request, res: Response): Promise<void> => {
                 users: emails,
                 sectionId: sectionInformation._id,
                 startsAt: currHourStart.toJSDate(),
-                endsAt: currHourEnd.toJSDate()
-            })
+                endsAt: currHourEnd.toJSDate(),
+            });
             await newTimeBlock.save();
         } else {
             // If a time block for the current hour does exist
             // Delete the current time block and add the updated one with the new users
-            timeBlockModel.deleteOne({_id: bookingTimeBlock._id}).catch((error) => {
+            timeBlockModel.deleteOne({ _id: bookingTimeBlock._id }).catch((error) => {
                 res.status(500).json({ error });
                 return;
             });
@@ -154,8 +154,8 @@ const bookSectionRoute = async (req: Request, res: Response): Promise<void> => {
                 users: newUsers,
                 sectionId: sectionInformation._id,
                 startsAt: currHourStart.toJSDate(),
-                endsAt: currHourEnd.toJSDate()
-            })
+                endsAt: currHourEnd.toJSDate(),
+            });
             newTimeBlock.save();
         }
 
@@ -168,9 +168,9 @@ const bookSectionRoute = async (req: Request, res: Response): Promise<void> => {
     const response = {
         sectionId: id,
         success: true,
-        message: "booking added successfully"
-    }
+        message: 'booking added successfully',
+    };
     res.status(200).json(response);
-}
+};
 
 export default bookSectionRoute;

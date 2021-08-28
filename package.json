@@ -11,6 +11,7 @@
         "format": "prettier --write \"src/**/*.ts\""
     },
     "devDependencies": {
+        "@types/cors": "^2.8.12",
         "@types/express": "^4.17.13",
         "@types/luxon": "^2.0.0",
         "@types/node": "^16.4.12",
@@ -26,6 +27,7 @@
     },
     "dependencies": {
         "argon2": "^0.28.2",
+        "cors": "^2.8.5",
         "discord.js": "^13.0.0-dev.t1628165339.3eb4140",
         "dotenv": "^10.0.0",
         "express": "^4.17.1",

@@ -8,6 +8,6 @@ const router = Router();
 
 router.get('/', querySectionRoute);
 router.post('/create', authMiddleware, createSectionRoute);
-router.post('/book/:id', bookSectionRoute);
+router.post('/book/:id', authMiddleware, bookSectionRoute);
 
 export default router;

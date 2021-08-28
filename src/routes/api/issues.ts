@@ -14,11 +14,6 @@ const issueRoute = async (request: Request, response: Response): Promise<void> =
     const ts = Date.parse(timestamp); //parsing timestamp to store and convert / check if proper date type
     const user = await userModel.findOne({ email: request.userEmail });
 
-    if (room === null) {
-        //if the room isn't valid / isn't found in database
-        response.status(422).json({ error: "That room doesn't exist, or was inputted incorrectly." });
-        return;
-    }
     //if the room is valid
     if (section === null) {
         //if the room's section isn't valid / isn't found in database
@@ -49,8 +44,21 @@ const issueRoute = async (request: Request, response: Response): Promise<void> =
         sectionId: sectionId,
         reportingUserId: user.id,
     });
-    let err = false;
+    if (room === null) {
+        //if the room isn't valid / isn't found in database
+        response.status(422).json({ error: "That room doesn't exist, or was inputted incorrectly." });
+        return;
+    } else {
+        //if room exists, push the issue id as foreign key for future population in querying
+        room.issues.push(issue.id);
+    }
 
+    //save room and issues
+    let err = false;
+    await room.save().catch((error) => {
+        response.status(400).json({ error });
+        return;
+    });
     await issue.save().catch((e) => {
         console.log(e);
         response.status(400).json({ error: "The issue couldn't be created!" });
