@@ -5,8 +5,7 @@ import Room from '../../../models/room.model';
 import { DateTime } from 'luxon';
 
 const bookSectionRoute = async (req: Request, res: Response): Promise<void> => {
-    const id = req.params.id;
-    const { emails, startsAt, endsAt } = req.body;
+    const { id, emails, startsAt, endsAt } = req.body;
 
     // Checks for needed request body variables
     if (!id || !emails || !startsAt || !endsAt) {
@@ -27,7 +26,7 @@ const bookSectionRoute = async (req: Request, res: Response): Promise<void> => {
 
     // Retrieves room that the section corresponds to
     const room = await Room.findOne({ _id: sectionInformation.roomId }).catch((error) => {
-        res.status(404).json({ error });
+        res.status(500).json({ error });
         return;
     });
 
@@ -38,6 +37,29 @@ const bookSectionRoute = async (req: Request, res: Response): Promise<void> => {
 
     const start = DateTime.fromISO(String(startsAt), { zone: 'America/Toronto' });
     const end = DateTime.fromISO(String(endsAt), { zone: 'America/Toronto' });
+
+    // Check that the start and end DateTimes are valid
+    if (!start.isValid || !end.isValid) {
+        res.status(404).json({ error: 'validation failed, dates are not valid' });
+        return;
+    }
+
+    if (start.minute != 0 || end.minute != 0) {
+        res.status(404).json({ error: 'validation failed, start and end times do not fall on the start of an hour' });
+        return;
+    }
+
+    // Finds and stores all booked time blocks within the given time range
+    const bookedTimeBlocks = await timeBlockModel
+        .find({
+            sectionId: sectionInformation._id,
+            startsAt: { $gte: start.toJSDate() },
+            endsAt: { $lte: end.toJSDate() },
+        })
+        .catch((error) => {
+            res.status(500).json({ error });
+            return [];
+        });
 
     // Determine if the requested booking is valid by checking if all of the hours fall under open times and that the section will never be over capacity
     let currHourStart = start;
@@ -62,19 +84,10 @@ const bookSectionRoute = async (req: Request, res: Response): Promise<void> => {
             break;
         }
 
-        // Query a time block for the current hour
-        const bookingTimeBlock = await timeBlockModel
-            .findOne({
-                sectionId: sectionInformation._id,
-                startsAt: currHourStart.toJSDate(),
-                endsAt: currHourEnd.toJSDate(),
-            })
-            .catch((error) => {
-                res.status(500).json({ error });
-                return;
-            });
+        // Check for time block for the current hour from list of time blocks in the range
+        const bookedTimeBlockFound = bookedTimeBlocks.find((bookedTimeBlock) => bookedTimeBlock.startsAt.getTime() === currHourStart.toMillis());
 
-        if (!bookingTimeBlock) {
+        if (!bookedTimeBlockFound) {
             // If a time block for the current hour does not exist
             // Check if the amount of users will exceed to the section capacity
             if (emails.length > sectionInformation.capacity) {
@@ -84,7 +97,7 @@ const bookSectionRoute = async (req: Request, res: Response): Promise<void> => {
         } else {
             // If a time block for the current hour does exist
             // Check if the amount of users already booked plus the new users will exceed to the section capacity
-            const newUsers = bookingTimeBlock.users.concat(emails);
+            const newUsers = bookedTimeBlockFound.users.concat(emails);
             if (newUsers.length > sectionInformation.capacity) {
                 overCapacity = true;
                 break;
@@ -118,46 +131,11 @@ const bookSectionRoute = async (req: Request, res: Response): Promise<void> => {
 
     currHourStart = start;
     currHourEnd = currHourStart.plus({ hours: 1 });
-
     while (currHourStart < end) {
-        // Query a time block for the current hour
-        const bookingTimeBlock = await timeBlockModel
-            .findOne({
-                sectionId: sectionInformation._id,
-                startsAt: currHourStart.toJSDate(),
-                endsAt: currHourEnd.toJSDate(),
-            })
-            .catch((error) => {
-                res.status(500).json({ error });
-                return;
-            });
+        await timeBlockModel.updateOne({ sectionId: sectionInformation._id, startsAt: currHourStart.toJSDate(), endsAt: currHourEnd.toJSDate() }, { $push: { users: emails } }, { upsert: true });
 
-        if (!bookingTimeBlock) {
-            // If a time block for the current hour does not exist
-            // Add the new time block
-            const newTimeBlock = new timeBlockModel({
-                users: emails,
-                sectionId: sectionInformation._id,
-                startsAt: currHourStart.toJSDate(),
-                endsAt: currHourEnd.toJSDate(),
-            });
-            await newTimeBlock.save();
-        } else {
-            // If a time block for the current hour does exist
-            // Delete the current time block and add the updated one with the new users
-            timeBlockModel.deleteOne({ _id: bookingTimeBlock._id }).catch((error) => {
-                res.status(500).json({ error });
-                return;
-            });
-            const newUsers = bookingTimeBlock.users.concat(emails);
-            const newTimeBlock = new timeBlockModel({
-                users: newUsers,
-                sectionId: sectionInformation._id,
-                startsAt: currHourStart.toJSDate(),
-                endsAt: currHourEnd.toJSDate(),
-            });
-            newTimeBlock.save();
-        }
+        console.log(sectionInformation._id, currHourStart.toJSDate(), currHourEnd.toJSDate());
+        console.log(emails);
 
         // Increments hour start and end for next iteration
         currHourStart = currHourStart.plus({ hours: 1 });
