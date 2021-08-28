@@ -38,4 +38,6 @@ mongoose
         console.log(`Failed to connect to MongoDB database: ${e}`);
     });
 
-initDiscord();
+if (process.env.RUN_DISCORD === 'true') {
+    initDiscord();
+}
