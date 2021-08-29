@@ -69,18 +69,10 @@ async function searchTimeblocks(selectedDate: string, sectionInformation: Sectio
     //Function finds all available timeblocks for a given date
 
     const currentDate = DateTime.now().setZone('America/Toronto');
-    let nextHour = '00';
+    const nextHour = currentDate.toISODate() === selectedDate ? currentDate.hour + 1 : 0;
 
-    if (currentDate.toISODate() === selectedDate) {
-        nextHour = String(currentDate.hour + 1);
-
-        if (nextHour.length === 1) {
-            nextHour = `0${nextHour}`;
-        }
-    }
-
-    const startDate = DateTime.fromISO(String(`${selectedDate}T${nextHour}:00`), { zone: 'America/Toronto' });
-    const endDate = DateTime.fromISO(String(`${selectedDate}T23:00`), { zone: 'America/Toronto' });
+    const startDate = DateTime.fromISO(selectedDate, { zone: 'America/Toronto' }).set({ hour: nextHour });
+    const endDate = DateTime.fromISO(selectedDate, { zone: 'America/Toronto' }).set({ hour: 23 });
 
     const bookedTimeblocks = await Timeblock.find({
         sectionId: sectionInformation._id,
@@ -94,16 +86,8 @@ async function searchTimeblocks(selectedDate: string, sectionInformation: Sectio
 
     // Iterate through the hours in the given time range
     while (currHourStart < endDate) {
-        // Finds schedule start and end for the day that the current hour falls on
-        const currWeekDay = currHourStart.weekday;
-        let scheduleDayStart = 0;
-        let scheduleDayEnd = 0;
-        for (const day of roomInformation.schedule) {
-            if (day.dayOfWeek + 1 === currWeekDay) {
-                scheduleDayStart = day.start;
-                scheduleDayEnd = day.end;
-            }
-        }
+        // Finds schedule start and end for the day that the current hour falls on and assigns the appropriate hours for scheduleDayStart and scheduleDayEnd
+        const { start: scheduleDayStart, end: scheduleDayEnd } = roomInformation.schedule.find((day) => day.dayOfWeek + 1 === currHourStart.weekday) ?? { start: 0, end: 0 };
 
         // Checks if the hour falls under an open time for the room and if it does adds hour to the list of available times
         if (!roomInformation.closed && currHourStart.weekday === currHourEnd.weekday && currHourStart.hour >= scheduleDayStart && currHourEnd.hour <= scheduleDayEnd) {
@@ -136,11 +120,7 @@ async function searchTimeblocks(selectedDate: string, sectionInformation: Sectio
 
 function timeConversion(timeObject: Date) {
     //Converts 24 hour time to 12 hour time with a.m. and p.m. and changes 0:00 to 12:00
-    const currentHour = DateTime.fromJSDate(timeObject).hour;
-    const convertedTime = currentHour % 12 || 12;
-    const suffix = currentHour < 12 ? 'am' : 'pm';
-
-    return `${convertedTime}:00 ${suffix}`;
+    return DateTime.fromJSDate(timeObject, { zone: 'America/Toronto' }).toFormat('h:mm a');
 }
 
 function parseTimeblocks(timeBlocks: TimeblockInformation[]) {
