@@ -1,7 +1,7 @@
 import { Schema, model, Types } from 'mongoose';
 import { Schedule } from '../types/Schedule';
 
-interface Room {
+export interface Room {
     name: string;
     closed: boolean;
     sections: [Types.ObjectId];

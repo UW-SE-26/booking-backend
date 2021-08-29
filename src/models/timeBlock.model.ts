@@ -1,10 +1,10 @@
-import { Schema, model, ObjectId, Types } from 'mongoose';
+import { Schema, model, Types } from 'mongoose';
 
 interface TimeBlock {
     // Users that are signed up for time block
     users: [string];
     // Id of the room section that the time block corresponds to
-    sectionId: ObjectId;
+    sectionId: Types.ObjectId;
     startsAt: Date;
     endsAt: Date;
 }
