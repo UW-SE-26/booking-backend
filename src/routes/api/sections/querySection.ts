@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import sectionModel from '../../../models/section.model';
-import timeBlockModel from '../../../models/timeblock.model';
+import timeBlockModel from '../../../models/timeBlock.model';
 import Room from '../../../models/room.model';
 import { DateTime } from 'luxon';
 
