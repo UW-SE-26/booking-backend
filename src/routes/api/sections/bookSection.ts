@@ -44,7 +44,7 @@ const bookSectionRoute = async (req: Request, res: Response): Promise<void> => {
         return;
     }
 
-    if (start.minute != 0 || end.minute != 0) {
+    if (!(start.toSeconds() % 3600 === 0 && end.toSeconds() % 3600 === 0)) {
         res.status(404).json({ error: 'validation failed, start and end times do not fall on the start of an hour' });
         return;
     }
@@ -133,9 +133,6 @@ const bookSectionRoute = async (req: Request, res: Response): Promise<void> => {
     currHourEnd = currHourStart.plus({ hours: 1 });
     while (currHourStart < end) {
         await timeBlockModel.updateOne({ sectionId: sectionInformation._id, startsAt: currHourStart.toJSDate(), endsAt: currHourEnd.toJSDate() }, { $push: { users: emails } }, { upsert: true });
-
-        console.log(sectionInformation._id, currHourStart.toJSDate(), currHourEnd.toJSDate());
-        console.log(emails);
 
         // Increments hour start and end for next iteration
         currHourStart = currHourStart.plus({ hours: 1 });
