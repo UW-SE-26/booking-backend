@@ -2,7 +2,7 @@ import { Schema, model, ObjectId, Types } from 'mongoose';
 
 interface TimeBlock {
     // Users that are signed up for time block
-    users: [ObjectId];
+    users: [string];
     // Id of the room section that the time block corresponds to
     sectionId: ObjectId;
     startsAt: Date;
@@ -11,7 +11,7 @@ interface TimeBlock {
 
 const timeBlockSchema = new Schema<TimeBlock>({
     // Users that are signed up for time block
-    users: [Types.ObjectId],
+    users: [String],
     // Id of the room section that the time block corresponds to
     sectionId: Types.ObjectId,
     startsAt: Date,
