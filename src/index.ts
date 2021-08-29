@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import cors from 'cors';
 import apiRoutes from './routes/api';
 import { JWTPayload } from 'jose/webcrypto/types';
 import { init as initDiscord } from './discord';
@@ -28,6 +29,8 @@ mongoose
         console.log('Successfully connected to MongoDB database');
         const app = express();
 
+        // Enable CORS for all origins for testing
+        app.use(cors());
         app.use(express.json());
         app.use('/api', apiRoutes);
         app.listen(process.env.PORT, () => {
@@ -38,4 +41,6 @@ mongoose
         console.log(`Failed to connect to MongoDB database: ${e}`);
     });
 
-initDiscord();
+if (process.env.ENABLE_DISCORD_BOT === 'true' && process.env.DISCORD_TOKEN !== undefined) {
+    initDiscord();
+}

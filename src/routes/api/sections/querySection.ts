@@ -9,7 +9,7 @@ import { DateTime } from 'luxon';
  * @author Ross Cleary, Kevin Wang
  */
 
-const querySection = async (req: Request, res: Response): Promise<void> => {
+const querySectionRoute = async (req: Request, res: Response): Promise<void> => {
     const { id, startsAt, endsAt } = req.query;
 
     if (id && startsAt && endsAt) {
@@ -39,7 +39,7 @@ const querySection = async (req: Request, res: Response): Promise<void> => {
             res.status(400).json({ error: 'validation failed, variable types are incorrect' });
             return;
         } else {
-            // Retrives room that the section corresponds to
+            // Retrieves room that the section corresponds to
             const room = await Room.findOne({ _id: sectionInformation.roomId }).catch((error) => {
                 res.status(404).json({ error });
                 return;
@@ -126,4 +126,4 @@ const querySection = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
-export default querySection;
+export default querySectionRoute;
