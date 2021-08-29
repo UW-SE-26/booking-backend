@@ -1,7 +1,7 @@
 import { CommandInteraction, MessageEmbed, MessageActionRow, MessageSelectMenu, MessageButton, ButtonInteraction, SelectMenuInteraction, Message } from 'discord.js';
 import roomModel, { Room } from '../../models/room.model';
 import sectionModel, { Section } from '../../models/section.model';
-import Timeblock from '../../models/timeblock.model';
+import Timeblock from '../../models/timeBlock.model';
 import { DateTime } from 'luxon';
 import { Types } from 'mongoose';
 
