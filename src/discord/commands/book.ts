@@ -129,7 +129,8 @@ function parseTimeblocks(timeBlocks: TimeblockInformation[]) {
     const timeBlockOptions = [];
     for (const timeBlock of timeBlocks) {
         timeBlockOptions.push({
-            label: `‎${timeBlock.availableCapacity} Capacity Available: ‎ ‎${timeConversion(timeBlock.startsAt)} - ${timeConversion(timeBlock.endsAt)}‎`,
+            label: `‎‎${timeConversion(timeBlock.startsAt)} - ${timeConversion(timeBlock.endsAt)}‎`,
+            description: `${timeBlock.availableCapacity} Spaces Available`,
             value: `‎${timeBlock.startsAt.hour},‎${timeBlock.endsAt.hour},${timeBlock.availableCapacity}`,
         });
     }
