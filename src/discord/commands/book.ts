@@ -4,10 +4,11 @@ import sectionModel, { Section } from '../../models/section.model';
 import Timeblock from '../../models/timeBlock.model';
 import { DateTime } from 'luxon';
 import { Types } from 'mongoose';
+import manageCommand from './manage';
 
 interface TimeblockInformation {
-    startsAt: Date;
-    endsAt: Date;
+    startsAt: DateTime;
+    endsAt: DateTime;
     availableCapacity: number;
 }
 
@@ -96,15 +97,15 @@ async function searchTimeblocks(selectedDate: string, sectionInformation: Sectio
 
             if (bookedTimeBlockFound) {
                 const newTimeBlock = {
-                    startsAt: currHourStart.toJSDate(),
-                    endsAt: currHourEnd.toJSDate(),
+                    startsAt: currHourStart,
+                    endsAt: currHourEnd,
                     availableCapacity: sectionInformation.capacity - bookedTimeBlockFound.users.length,
                 };
                 timeBlocks.push(newTimeBlock);
             } else {
                 const newTimeBlock = {
-                    startsAt: currHourStart.toJSDate(),
-                    endsAt: currHourEnd.toJSDate(),
+                    startsAt: currHourStart,
+                    endsAt: currHourEnd,
                     availableCapacity: sectionInformation.capacity,
                 };
                 timeBlocks.push(newTimeBlock);
@@ -118,9 +119,9 @@ async function searchTimeblocks(selectedDate: string, sectionInformation: Sectio
     return timeBlocks;
 }
 
-function timeConversion(timeObject: Date) {
+function timeConversion(timeObject: DateTime) {
     //Converts 24 hour time to 12 hour time with a.m. and p.m. and changes 0:00 to 12:00
-    return DateTime.fromJSDate(timeObject, { zone: 'America/Toronto' }).toFormat('h:mm a');
+    return timeObject.setZone('America/Toronto').toFormat('h:mm a');
 }
 
 function parseTimeblocks(timeBlocks: TimeblockInformation[]) {
@@ -128,8 +129,8 @@ function parseTimeblocks(timeBlocks: TimeblockInformation[]) {
     const timeBlockOptions = [];
     for (const timeBlock of timeBlocks) {
         timeBlockOptions.push({
-            label: `${timeConversion(timeBlock.startsAt)} - ${timeConversion(timeBlock.endsAt)}`,
-            value: `${timeConversion(timeBlock.startsAt)} - ${timeConversion(timeBlock.endsAt)}`,
+            label: `‎${timeBlock.availableCapacity} Capacity Available: ‎ ‎${timeConversion(timeBlock.startsAt)} - ${timeConversion(timeBlock.endsAt)}‎`,
+            value: `‎${timeBlock.startsAt.hour},‎${timeBlock.endsAt.hour},${timeBlock.availableCapacity}`,
         });
     }
 
@@ -178,7 +179,8 @@ export default {
             .setFooter(`Currently Booking: ${roomInformation!.name} - ${sectionInformation!.name}`);
 
         let selectMenuDate = new MessageActionRow().addComponents(new MessageSelectMenu().setCustomId('dateSelectMenu').setPlaceholder('Select Date of Room Booking').addOptions(getDateOptions()));
-        let avaliableTimeblocks;
+        let avaliableTimeblocks, selectedTimeblock, _startsAt, selectedDate, _endsAt, maxCapacity, newTimeBlock;
+        let menuSelectedDate: string;
 
         const message = (await interaction.reply({ embeds: [embed], components: [selectMenuDate], fetchReply: true })) as Message;
 
@@ -187,16 +189,28 @@ export default {
         selectMenuCollector.on('collect', async (menuInteraction: SelectMenuInteraction) => {
             switch (menuInteraction.customId) {
                 case 'dateSelectMenu':
+                    menuSelectedDate = menuInteraction.values[0];
                     selectMenuDate = new MessageActionRow().addComponents(
-                        new MessageSelectMenu().setCustomId('dateSelectMenu').setPlaceholder('Select Date of Room Booking').addOptions(getDateOptions(menuInteraction.values[0]))
+                        new MessageSelectMenu().setCustomId('dateSelectMenu').setPlaceholder('Select Date of Room Booking').addOptions(getDateOptions(menuSelectedDate))
                     );
-                    avaliableTimeblocks = new MessageActionRow().addComponents(parseTimeblocks(await searchTimeblocks(menuInteraction.values[0], sectionInformation!, roomInformation!)));
+                    avaliableTimeblocks = new MessageActionRow().addComponents(parseTimeblocks(await searchTimeblocks(menuSelectedDate, sectionInformation!, roomInformation!)));
 
                     menuInteraction.update({ components: [selectMenuDate, avaliableTimeblocks] });
                     break;
                 case 'timeBlockSelectMenu':
-                    //Temporary method for booking a room (postponed until database structure + user integration is fleshed out)
-                    await menuInteraction.reply(`Timeslot ${menuInteraction.values[0]} supposedly booked!`);
+                    //ESLint disabled for next line as regex is correct at removing unicode characters. (no-control-regex)
+                    selectedTimeblock = menuInteraction.values[0].split(',').map((element: string) => element.replace(/[^\x00-\x7F]/g, '')); //eslint-disable-line
+
+                    selectedDate = DateTime.fromFormat(menuSelectedDate, 'yyyy-MM-dd', { zone: 'America/Toronto' });
+                    _startsAt = selectedDate.set({ hour: parseInt(selectedTimeblock[0]) }).toJSDate();
+                    _endsAt = selectedDate.set({ hour: parseInt(selectedTimeblock[1]) }).toJSDate();
+                    maxCapacity = parseInt(selectedTimeblock[2]);
+
+                    await Timeblock.updateOne({ sectionId: Types.ObjectId(_sectionId), startsAt: _startsAt, endsAt: _endsAt }, { $push: { users: [] } }, { upsert: true });
+                    newTimeBlock = await Timeblock.findOne({ sectionId: Types.ObjectId(_sectionId), startsAt: _startsAt, endsAt: _endsAt });
+
+                    manageCommand.execute(menuInteraction, [interaction!.user!.id], maxCapacity, newTimeBlock!._id);
+
                     await interaction.deleteReply();
                     break;
                 default:
