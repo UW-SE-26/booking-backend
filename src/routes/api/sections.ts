@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import querySectionRoute from './sections/querySection';
-import queryBookingsRoute from './sections/queryBookings';
+import queryBookingsRoute from './bookings/queryBookings';
 import createSectionRoute from './sections/createSection';
 import bookSectionRoute from './sections/bookSection';
 import authMiddleware from '../../middleware/jwtVerify';
