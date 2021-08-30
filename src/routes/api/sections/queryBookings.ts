@@ -12,7 +12,6 @@ const queryBookingsRoute = async (req: Request, res: Response): Promise<void> =>
                     res.status(404).json({ error });
                     return;
                 });
-            console.log(timeBlocksBooked)
             if (!timeBlocksBooked) {
                 res.status(404).json({ error: "Booking does not exist" });
                 return;
