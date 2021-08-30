@@ -3,6 +3,7 @@ import loginRoute from './users/login';
 import registerRoute from './users/register';
 import verifyRoute from './users/verify';
 import { resetPasswordRoute, changePasswordRoute } from './users/passwordReset';
+import queryBookingsRoute from './users/queryBookings'
 import bodyVerify from '../../middleware/bodyVerify';
 
 const router = Router();
@@ -12,5 +13,6 @@ router.post('/register', bodyVerify(['name', 'email', 'password']), registerRout
 router.post('/verify', bodyVerify(['email', 'code']), verifyRoute);
 router.post('/resetPassword', bodyVerify(['email']), resetPasswordRoute);
 router.post('/changePassword', bodyVerify(['email', 'password', 'code']), changePasswordRoute);
+router.get('/bookings/active', queryBookingsRoute);
 
 export default router;
