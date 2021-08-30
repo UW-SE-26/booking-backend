@@ -7,9 +7,9 @@ interface Booking {
 }
 
 const bookingSchema = new Schema<Booking>({
-    users: [{ type: String, ref: 'User' }],
-    timeBlock: { type: Types.ObjectId, ref: 'TimeBlock' },
-    booker: { type: String, ref: 'User' },
+    users: [{ type: String, required: true }],
+    timeBlock: { type: Types.ObjectId, required: true, ref: 'TimeBlock' },
+    booker: { type: String, required: true },
 });
 
 const booking = model<Booking>('Booking', bookingSchema);
