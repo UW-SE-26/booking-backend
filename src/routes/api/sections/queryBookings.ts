@@ -6,18 +6,13 @@ const queryBookingsRoute = async (req: Request, res: Response): Promise<void> =>
     const sectionId = req.query.id;
     if (sectionId && typeof sectionId === "string") {
         const sectionObjectId = Types.ObjectId(sectionId);
-            const timeBlocksBooked = await TimeBlock.find({ sectionId: sectionObjectId })
-                .populate('section')
-                .catch((error) => {
-                    res.status(404).json({ error });
-                    return;
-                });
-            if (!timeBlocksBooked) {
-                res.status(404).json({ error: "Booking does not exist" });
+        const timeBlocksBooked = await TimeBlock.find({ sectionId: sectionObjectId })
+            .populate('section')
+            .catch((error) => {
+                res.status(404).json({ error });
                 return;
-            } else {
-                res.status(200).json({ timeBlocksBooked });
-            }   
+            });
+        res.status(200).json({ timeBlocksBooked });
     } else {
         res.status(404).json({ error: "Validation failed, section is not valid" });
         return;
