@@ -132,7 +132,7 @@ const bookSectionRoute = async (req: Request, res: Response): Promise<void> => {
     currHourStart = start;
     currHourEnd = currHourStart.plus({ hours: 1 });
     while (currHourStart < end) {
-        await timeBlockModel.updateOne({ sectionId: sectionInformation._id, section: sectionInformation._id, startsAt: currHourStart.toJSDate(), endsAt: currHourEnd.toJSDate() }, { $push: { users: emails } }, { upsert: true });
+        await timeBlockModel.updateOne({ sectionId: sectionInformation._id, startsAt: currHourStart.toJSDate(), endsAt: currHourEnd.toJSDate() }, { $push: { users: emails } }, { upsert: true });
 
         // Increments hour start and end for next iteration
         currHourStart = currHourStart.plus({ hours: 1 });

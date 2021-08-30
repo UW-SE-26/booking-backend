@@ -5,7 +5,6 @@ interface TimeBlock {
     users: [string];
     // Id of the room section that the time block corresponds to
     sectionId: Types.ObjectId;
-    section: Types.ObjectId;
     startsAt: Date;
     endsAt: Date;
 }
@@ -15,7 +14,6 @@ const timeBlockSchema = new Schema<TimeBlock>({
     users: [String],
     // Id of the room section that the time block corresponds to
     sectionId: Types.ObjectId,
-    section: { type: Types.ObjectId, ref: 'Section' },
     startsAt: Date,
     endsAt: Date,
 });
