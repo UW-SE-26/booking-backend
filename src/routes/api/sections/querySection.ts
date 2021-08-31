@@ -3,6 +3,7 @@ import sectionModel from '../../../models/section.model';
 import timeBlockModel from '../../../models/timeBlock.model';
 import Room from '../../../models/room.model';
 import { DateTime } from 'luxon';
+import Booking from '../../../models/booking.model';
 
 /**
  * Route to query all sections or individual section
@@ -86,10 +87,27 @@ const querySectionRoute = async (req: Request, res: Response): Promise<void> => 
                     const bookedTimeBlockFound = bookedTimeBlocks.find((bookedTimeBlock) => bookedTimeBlock.startsAt.getTime() === currHourStart.toMillis());
 
                     if (bookedTimeBlockFound) {
+                        let currUserCount = 0;
+                        for (const booking of bookedTimeBlockFound.bookings) {
+                            const currBooking = await Booking
+                                .findOne({
+                                    _id: booking,
+                                })
+                                .populate('timeBlock')
+                                .catch((error) => {
+                                    res.status(500).json({ error });
+                                    return;
+                                });
+                            if (!currBooking) {
+                                res.status(404);
+                                return;
+                            }
+                            currUserCount += currBooking.users.length;
+                        }
                         const newTimeBlock = {
                             startsAt: currHourStart.toJSDate(),
                             endsAt: currHourEnd.toJSDate(),
-                            availableCapacity: sectionInformation.capacity - bookedTimeBlockFound.users.length,
+                            availableCapacity: sectionInformation.capacity - currUserCount,
                         };
                         timeBlocks.push(newTimeBlock);
                     } else {

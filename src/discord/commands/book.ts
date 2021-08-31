@@ -4,6 +4,7 @@ import sectionModel, { Section } from '../../models/section.model';
 import Timeblock from '../../models/timeBlock.model';
 import { DateTime } from 'luxon';
 import { Types } from 'mongoose';
+import Booking from '../../models/booking.model';
 
 interface TimeblockInformation {
     startsAt: Date;
@@ -95,10 +96,22 @@ async function searchTimeblocks(selectedDate: string, sectionInformation: Sectio
             const bookedTimeBlockFound = bookedTimeblocks.find((bookedTimeBlock) => bookedTimeBlock.startsAt.getTime() === currHourStart.toMillis());
 
             if (bookedTimeBlockFound) {
+                let currUserCount = 0;
+                for (const booking of bookedTimeBlockFound.bookings) {
+                    const currBooking = await Booking
+                        .findOne({
+                            _id: booking,
+                        })
+                        .populate('timeBlock')
+                    if (!currBooking) {
+                        return;
+                    }
+                    currUserCount += currBooking.users.length;
+                }
                 const newTimeBlock = {
                     startsAt: currHourStart.toJSDate(),
                     endsAt: currHourEnd.toJSDate(),
-                    availableCapacity: sectionInformation.capacity - bookedTimeBlockFound.users.length,
+                    availableCapacity: sectionInformation.capacity - currUserCount,
                 };
                 timeBlocks.push(newTimeBlock);
             } else {
@@ -190,7 +203,8 @@ export default {
                     selectMenuDate = new MessageActionRow().addComponents(
                         new MessageSelectMenu().setCustomId('dateSelectMenu').setPlaceholder('Select Date of Room Booking').addOptions(getDateOptions(menuInteraction.values[0]))
                     );
-                    avaliableTimeblocks = new MessageActionRow().addComponents(parseTimeblocks(await searchTimeblocks(menuInteraction.values[0], sectionInformation!, roomInformation!)));
+                    avaliableTimeblocks = new MessageActionRow().addComponents(parseTimeblocks((await searchTimeblocks(menuInteraction.values[0], sectionInformation!, roomInformation!))!)
+                    );
 
                     menuInteraction.update({ components: [selectMenuDate, avaliableTimeblocks] });
                     break;
