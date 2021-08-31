@@ -195,8 +195,7 @@ export default {
                     selectMenuDate = new MessageActionRow().addComponents(
                         new MessageSelectMenu().setCustomId('dateSelectMenu').setPlaceholder('Select Date of Room Booking').addOptions(getDateOptions(menuInteraction.values[0]))
                     );
-                    avaliableTimeblocks = new MessageActionRow().addComponents(parseTimeblocks((await searchTimeblocks(menuInteraction.values[0], sectionInformation!, roomInformation!))!)
-                    );
+                    avaliableTimeblocks = new MessageActionRow().addComponents(parseTimeblocks((await searchTimeblocks(menuInteraction.values[0], sectionInformation!, roomInformation!))!));
 
                     menuInteraction.update({ components: [selectMenuDate, avaliableTimeblocks] });
                     break;

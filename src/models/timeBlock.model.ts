@@ -1,5 +1,5 @@
 import { Schema, model, Types, Document, PopulatedDoc } from 'mongoose';
-import { Booking } from './booking.model'
+import { Booking } from './booking.model';
 
 interface TimeBlock {
     // Users that are signed up for time block

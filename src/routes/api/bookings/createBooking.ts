@@ -3,8 +3,8 @@ import timeBlockModel from '../../../models/timeBlock.model';
 import sectionModel from '../../../models/section.model';
 import Room from '../../../models/room.model';
 import { DateTime } from 'luxon';
-import booking from '../../../models/booking.model'
-import mongoose from 'mongoose'
+import booking from '../../../models/booking.model';
+import mongoose from 'mongoose';
 
 const createBookingRoute = async (req: Request, res: Response): Promise<void> => {
     const { id, emails, booker, startsAt, endsAt } = req.body;
@@ -148,27 +148,27 @@ const createBookingRoute = async (req: Request, res: Response): Promise<void> =>
                 _id: new mongoose.Types.ObjectId(),
                 users: emails,
                 timeBlock: bookedTimeBlockFound._id,
-                booker: booker
+                booker: booker,
             });
             await newBooking.save();
             // Update the time block to include the new booking in the bookings array of the time block
-            await timeBlockModel.updateOne({ _id: bookedTimeBlockFound._id }, { $push: { bookings: newBooking._id }});
+            await timeBlockModel.updateOne({ _id: bookedTimeBlockFound._id }, { $push: { bookings: newBooking._id } });
         } else {
             // If the time block does not exist
-            // Create new time block 
+            // Create new time block
             const newTimeBlock = new timeBlockModel({
                 _id: new mongoose.Types.ObjectId(),
                 bookings: [],
                 sectionId: sectionInformation._id,
                 startsAt: currHourStart.toJSDate(),
-                endsAt: currHourEnd.toJSDate()
+                endsAt: currHourEnd.toJSDate(),
             });
             // Create new booking
             const firstBooking = new booking({
                 _id: new mongoose.Types.ObjectId(),
                 users: emails,
                 timeBlock: newTimeBlock._id,
-                booker: booker
+                booker: booker,
             });
             // Add the new booking to the bookings array of the new time block
             newTimeBlock.bookings.push(firstBooking._id);
