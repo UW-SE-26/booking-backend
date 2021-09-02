@@ -1,13 +1,13 @@
 import { Request, Response } from 'express';
-import timeBlockModel from '../../../models/timeBlock.model';
-import sectionModel from '../../../models/section.model';
+import TimeBlockModel from '../../../models/timeBlock.model';
+import SectionModel from '../../../models/section.model';
 import Room from '../../../models/room.model';
 import { DateTime } from 'luxon';
-import booking from '../../../models/booking.model';
-import mongoose from 'mongoose';
+import BookingModel, { Booking } from '../../../models/booking.model';
 
 const createBookingRoute = async (req: Request, res: Response): Promise<void> => {
-    const { id, emails, booker, startsAt, endsAt } = req.body;
+    const { id, emails, startsAt, endsAt } = req.body;
+    const booker = req.userEmail;
 
     // Checks for needed request body variables
     if (!id || !emails || !booker || !startsAt || !endsAt) {
@@ -16,7 +16,7 @@ const createBookingRoute = async (req: Request, res: Response): Promise<void> =>
     }
 
     // Retrieves section with the section id given
-    const sectionInformation = await sectionModel.findOne({ _id: id }).catch((error) => {
+    const sectionInformation = await SectionModel.findOne({ _id: id }).catch((error) => {
         res.status(500).json({ error });
         return;
     });
@@ -52,12 +52,11 @@ const createBookingRoute = async (req: Request, res: Response): Promise<void> =>
     }
 
     // Finds and stores all booked time blocks within the given time range
-    const bookedTimeBlocks = await timeBlockModel
-        .find({
-            sectionId: sectionInformation._id,
-            startsAt: { $gte: start.toJSDate() },
-            endsAt: { $lte: end.toJSDate() },
-        })
+    const bookedTimeBlocks = await TimeBlockModel.find({
+        sectionId: sectionInformation._id,
+        startsAt: { $gte: start.toJSDate() },
+        endsAt: { $lte: end.toJSDate() },
+    })
         .populate('bookings')
         .catch((error) => {
             res.status(500).json({ error });
@@ -100,10 +99,7 @@ const createBookingRoute = async (req: Request, res: Response): Promise<void> =>
         } else {
             // If a time block for the current hour does exist
             // Check if the amount of users already booked plus the new users will exceed to the section capacity
-            let currUserCount = 0;
-            for (const booking of bookedTimeBlockFound.bookings) {
-                currUserCount += booking.users.length;
-            }
+            const currUserCount = bookedTimeBlockFound.bookings.reduce((total: number, booking: Booking) => (total += booking.users.length), 0);
             if (currUserCount + emails.length > sectionInformation.capacity) {
                 overCapacity = true;
                 break;
@@ -144,36 +140,31 @@ const createBookingRoute = async (req: Request, res: Response): Promise<void> =>
         if (bookedTimeBlockFound) {
             // If the time block exists
             // Create new booking and add it to database
-            const newBooking = new booking({
-                _id: new mongoose.Types.ObjectId(),
+            const newBooking = await BookingModel.create({
                 users: emails,
                 timeBlock: bookedTimeBlockFound._id,
                 booker: booker,
             });
-            await newBooking.save();
             // Update the time block to include the new booking in the bookings array of the time block
-            await timeBlockModel.updateOne({ _id: bookedTimeBlockFound._id }, { $push: { bookings: newBooking._id } });
+            await TimeBlockModel.updateOne({ _id: bookedTimeBlockFound._id }, { $push: { bookings: newBooking._id } });
         } else {
             // If the time block does not exist
             // Create new time block
-            const newTimeBlock = new timeBlockModel({
-                _id: new mongoose.Types.ObjectId(),
+            const newTimeBlock = new TimeBlockModel({
                 bookings: [],
                 sectionId: sectionInformation._id,
                 startsAt: currHourStart.toJSDate(),
                 endsAt: currHourEnd.toJSDate(),
             });
-            // Create new booking
-            const firstBooking = new booking({
-                _id: new mongoose.Types.ObjectId(),
+            // Create new booking and add to database
+            const firstBooking = await BookingModel.create({
                 users: emails,
                 timeBlock: newTimeBlock._id,
                 booker: booker,
             });
             // Add the new booking to the bookings array of the new time block
             newTimeBlock.bookings.push(firstBooking._id);
-            // Add the new time block and new booking to the database
-            await firstBooking.save();
+            // Add the new time block to the database
             await newTimeBlock.save();
         }
 

@@ -3,6 +3,7 @@ import sectionModel from '../../../models/section.model';
 import timeBlockModel from '../../../models/timeBlock.model';
 import Room from '../../../models/room.model';
 import { DateTime } from 'luxon';
+import { Booking } from '../../../models/booking.model';
 
 /**
  * Route to query all sections or individual section
@@ -88,10 +89,7 @@ const querySectionRoute = async (req: Request, res: Response): Promise<void> => 
 
                     if (bookedTimeBlockFound) {
                         // If a time block for the current hour does exist
-                        let currUserCount = 0;
-                        for (const booking of bookedTimeBlockFound.bookings) {
-                            currUserCount += booking.users.length;
-                        }
+                        const currUserCount = bookedTimeBlockFound.bookings.reduce((total: number, booking: Booking) => (total += booking.users.length), 0);
                         const newTimeBlock = {
                             startsAt: currHourStart.toJSDate(),
                             endsAt: currHourEnd.toJSDate(),
