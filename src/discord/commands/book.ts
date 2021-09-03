@@ -5,6 +5,7 @@ import Timeblock from '../../models/timeBlock.model';
 import { DateTime } from 'luxon';
 import { Types } from 'mongoose';
 import manageCommand from './manage';
+import { Booking } from '../../models/booking.model';
 
 interface TimeblockInformation {
     startsAt: DateTime;
@@ -96,10 +97,12 @@ async function searchTimeblocks(selectedDate: string, sectionInformation: Sectio
             const bookedTimeBlockFound = bookedTimeblocks.find((bookedTimeBlock) => bookedTimeBlock.startsAt.getTime() === currHourStart.toMillis());
 
             if (bookedTimeBlockFound) {
+                // If a time block for the current hour does exist
+                const currUserCount = bookedTimeBlockFound.bookings.reduce((total: number, booking: Booking) => (total += booking.users.length), 0);
                 const newTimeBlock = {
                     startsAt: currHourStart,
                     endsAt: currHourEnd,
-                    availableCapacity: sectionInformation.capacity - bookedTimeBlockFound.users.length,
+                    availableCapacity: sectionInformation.capacity - currUserCount,
                 };
                 timeBlocks.push(newTimeBlock);
             } else {

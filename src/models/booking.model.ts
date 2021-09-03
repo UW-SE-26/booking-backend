@@ -14,4 +14,5 @@ const bookingSchema = new Schema<Booking>({
 
 const booking = model<Booking>('Booking', bookingSchema);
 
+export { Booking };
 export default booking;
