@@ -1,5 +1,8 @@
 import { ButtonInteraction, CommandInteraction, MessageEmbed, MessageActionRow, MessageButton, Message, SelectMenuInteraction } from 'discord.js';
-import Timeblock from '../../models/timeBlock.model';
+import { Types } from 'mongoose';
+import TimeblockModel from '../../models/timeBlock.model';
+import BookingModel from '../../models/booking.model';
+import SectionModel from '../../models/section.model';
 
 function updateEmbed(userArray: string[], maxCapacity: number, manageState: string) {
     const embedTitle = manageState === 'add' ? 'Adding' : 'Removing';
@@ -11,7 +14,7 @@ function updateEmbed(userArray: string[], maxCapacity: number, manageState: stri
         .setDescription(
             `To ${manageState} collaborators ${preposition} your booking, @ their Discord username!\n\nCurrently Invited Collaborators (${
                 maxCapacity! - userArray!.length
-            } available spaces left):\n<@!${userArray?.join('>\n<@!')}>`
+            } available spaces left):\n${userArray.map((user) => `<@!${user}>`).join('\n')}`
         );
 
     return embed;
@@ -28,9 +31,9 @@ function updateButtons(manageState: string) {
 }
 
 async function mongoDBFilter(userArray: string[], bookingId: string) {
-    //Ensures no duplicate members are listed under users of a certain timeblock (might need to alter this after updates)
+    //Ensures no duplicate members are listed under users of a certain booking
     const filterArray = [];
-    const currentUserArray = (await Timeblock.findOne({ _id: bookingId }))!.users;
+    const currentUserArray = (await BookingModel.findOne({ _id: Types.ObjectId(bookingId) }))!.users;
 
     for (const user of userArray) {
         if (!currentUserArray.includes(user)) {
@@ -42,14 +45,70 @@ async function mongoDBFilter(userArray: string[], bookingId: string) {
 
 async function parseCommandOptions(interaction: CommandInteraction) {
     const bookingId = interaction.options.getString('booking-id');
-    const bookedTimeblock = await Timeblock.findOne({ _id: bookingId });
+    //Regex filters out invalid booking ID formats
+    const hexRegex = /[0-9A-Fa-f]{6}/g;
 
-    if (bookedTimeblock === null) {
-        interaction.reply({ content: 'Invalid Booking ID: Do `/bookings` to see all your current bookings!', ephemeral: true });
-        return undefined;
+    if (!hexRegex.test(bookingId!)) {
+        interaction.reply({ content: 'Invalid Booking ID Format: Do `/view` to see all your current bookings!', ephemeral: true });
+        return;
     }
 
-    //TODO: Finish This after updates to the timeblock model
+    const bookedBooking = await BookingModel.findOne({ _id: Types.ObjectId(bookingId!) });
+
+    if (bookedBooking === null) {
+        interaction.reply({ content: 'Invalid Booking ID: Do `/view` to see all your current bookings!', ephemeral: true });
+        return;
+    }
+
+    const bookedTimeblock = await TimeblockModel.findOne({ _id: bookedBooking.timeBlock });
+    const bookedSection = await SectionModel.findOne({ _id: bookedTimeblock!.sectionId });
+    const maxCapacity = bookedSection!.capacity;
+
+    const manageState = interaction.options.getString('add-or-remove');
+    const usernameArray: string[] = [];
+    let bookError = false;
+
+    for (let i = 0; i < 5; i++) {
+        const username = interaction.options.getUser(`discord-username-${i + 1}`);
+
+        if (username !== null && !usernameArray.includes(username.id)) {
+            usernameArray.push(username.id);
+        }
+    }
+
+    if (manageState === 'add') {
+        if (bookedBooking.users.length + usernameArray.length > maxCapacity) {
+            interaction.reply({ content: `Too many members listed. Current avaliable space: ${maxCapacity - bookedBooking.users.length}`, ephemeral: true });
+            return;
+        }
+
+        for (const id of usernameArray) {
+            if (!bookedBooking.users.includes(id)) {
+                bookedBooking.users.push(id);
+            }
+        }
+        await bookedBooking.save();
+        interaction.reply({ content: 'User(s) successfully added.', ephemeral: true });
+    }
+
+    if (manageState === 'remove') {
+        for (const id of usernameArray) {
+            if (id === bookedBooking.booker) {
+                bookError = true;
+            } else if (bookedBooking.users.includes(id)) {
+                bookedBooking.users.splice(bookedBooking.users.indexOf(id), 1);
+            }
+        }
+        await bookedBooking.save();
+
+        if (bookError && usernameArray.length > 1) {
+            interaction.reply({ content: 'User(s) successfully removed.\nPS: Cannot remove the booker. Use `/delete` to delete a booking instead.', ephemeral: true });
+        } else if (bookError) {
+            interaction.reply({ content: 'Cannot remove the booker. Use `/delete` to delete a booking instead.', ephemeral: true });
+        } else {
+            interaction.reply({ content: 'User(s) successfully removed.', ephemeral: true });
+        }
+    }
 }
 
 export default {
@@ -79,16 +138,35 @@ export default {
             required: true,
         },
         {
-            type: 3,
-            name: 'discord-mentions',
-            description: "@'s of the collaborators' discord usernames",
+            type: 6,
+            name: 'discord-username-1',
+            description: 'Discord username (@) of the member',
             required: true,
+        },
+        {
+            type: 6,
+            name: 'discord-username-2',
+            description: 'Discord username (@) of the member',
+        },
+        {
+            type: 6,
+            name: 'discord-username-3',
+            description: 'Discord username (@) of the member',
+        },
+        {
+            type: 6,
+            name: 'discord-username-4',
+            description: 'Discord username (@) of the member',
+        },
+        {
+            type: 6,
+            name: 'discord-username-5',
+            description: 'Discord username (@) of the member',
         },
     ],
 
     async execute(interaction: CommandInteraction | SelectMenuInteraction, userArray?: string[], maxCapacity?: number, bookingId?: string): Promise<void> {
         if (interaction.isCommand()) {
-            //TODO: Finish this after updates
             await parseCommandOptions(interaction);
             return;
         }
@@ -107,8 +185,7 @@ export default {
             if (buttonInteraction.user.id === interaction.user.id) {
                 switch (buttonInteraction.customId) {
                     case 'completeBooking':
-                        //TODO: Adjust this to fit the new users format under timeblock model
-                        await Timeblock.updateOne({ _id: bookingId }, { $push: { users: await mongoDBFilter(userArray!, bookingId!) } }, { upsert: true });
+                        await BookingModel.updateOne({ _id: bookingId }, { $push: { users: await mongoDBFilter(userArray!, bookingId!) } }, { upsert: true });
 
                         interaction.followUp({ content: 'Booking Successfully Booked!', ephemeral: true });
                         interaction.deleteReply();
@@ -140,8 +217,12 @@ export default {
                 for (const mentionedUser of mentionedUsers) {
                     switch (manageState) {
                         case 'add':
-                            if (!userArray!.includes(mentionedUser[0])) {
-                                userArray!.push(mentionedUser[0]);
+                            if (maxCapacity! - userArray!.length > 0) {
+                                if (!userArray!.includes(mentionedUser[0])) {
+                                    userArray!.push(mentionedUser[0]);
+                                }
+                            } else {
+                                interaction.followUp({ content: 'There are no more available spaces left for additional members!', ephemeral: true });
                             }
                             break;
                         case 'remove':
