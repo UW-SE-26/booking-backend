@@ -20,8 +20,7 @@ const deleteBookingRoute = async (req: Request, res: Response): Promise<void> =>
     }
 
     // Retrieves the time block that corresponds to the booking
-    const bookingTimeBlock = await TimeBlockModel.findOne({ _id: booking.timeBlock })
-        .populate('bookings');
+    const bookingTimeBlock = await TimeBlockModel.findOne({ _id: booking.timeBlock }).populate('bookings');
 
     if (!bookingTimeBlock) {
         res.status(400);
