@@ -1,8 +1,9 @@
-import { Schema, model, Types } from 'mongoose';
+import { Schema, model, Types, Document, PopulatedDoc } from 'mongoose';
+import { Booking } from './booking.model';
 
 interface TimeBlock {
     // Users that are signed up for time block
-    users: [string];
+    bookings: PopulatedDoc<Booking & Document>;
     // Id of the room section that the time block corresponds to
     sectionId: Types.ObjectId;
     startsAt: Date;
@@ -11,7 +12,7 @@ interface TimeBlock {
 
 const timeBlockSchema = new Schema<TimeBlock>({
     // Users that are signed up for time block
-    users: [String],
+    bookings: [{ type: Types.ObjectId, ref: 'Booking' }],
     // Id of the room section that the time block corresponds to
     sectionId: Types.ObjectId,
     startsAt: Date,
