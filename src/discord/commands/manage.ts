@@ -13,7 +13,7 @@ function updateEmbed(userArray: string[], maxCapacity: number, manageState: stri
         .setTitle(`Currently ${embedTitle} Collaborators`)
         .setDescription(
             `To ${manageState} collaborators ${preposition} your booking, @ their Discord username!\n\nCurrently Invited Collaborators (${
-                maxCapacity! - userArray!.length
+                maxCapacity - userArray.length
             } available spaces left):\n${userArray.map((user) => `<@!${user}>`).join('\n')}`
         );
 
@@ -43,26 +43,38 @@ async function mongoDBFilter(userArray: string[], bookingId: string) {
     return filterArray;
 }
 
-async function parseCommandOptions(interaction: CommandInteraction) {
-    const bookingId = interaction.options.getString('booking-id');
+async function handleCommandInteraction(interaction: CommandInteraction) {
+    const bookingId = interaction.options.getString('booking-id', true);
     //Regex filters out invalid booking ID formats
     const hexRegex = /[0-9A-Fa-f]{6}/g;
 
-    if (!hexRegex.test(bookingId!)) {
+    if (!hexRegex.test(bookingId)) {
         interaction.reply({ content: 'Invalid Booking ID Format: Do `/view` to see all your current bookings!', ephemeral: true });
         return;
     }
 
-    const bookedBooking = await BookingModel.findOne({ _id: Types.ObjectId(bookingId!) });
+    const bookedBooking = await BookingModel.findOne({ _id: Types.ObjectId(bookingId) });
 
-    if (bookedBooking === null) {
+    if (!bookedBooking) {
         interaction.reply({ content: 'Invalid Booking ID: Do `/view` to see all your current bookings!', ephemeral: true });
         return;
     }
 
     const bookedTimeblock = await TimeblockModel.findOne({ _id: bookedBooking.timeBlock });
-    const bookedSection = await SectionModel.findOne({ _id: bookedTimeblock!.sectionId });
-    const maxCapacity = bookedSection!.capacity;
+
+    if (!bookedTimeblock) {
+        interaction.reply({ content: 'Timeblock not found! Please contact an admin.', ephemeral: true });
+        return;
+    }
+
+    const bookedSection = await SectionModel.findOne({ _id: bookedTimeblock.sectionId });
+
+    if (!bookedSection) {
+        interaction.reply({ content: 'Section not found! Please contact an admin.', ephemeral: true });
+        return;
+    }
+
+    const maxCapacity = bookedSection.capacity;
 
     const manageState = interaction.options.getString('add-or-remove');
     const usernameArray: string[] = [];
@@ -165,14 +177,14 @@ export default {
         },
     ],
 
-    async execute(interaction: CommandInteraction | SelectMenuInteraction, userArray?: string[], maxCapacity?: number, bookingId?: string): Promise<void> {
-        if (interaction.isCommand()) {
-            await parseCommandOptions(interaction);
-            return;
-        }
+    async execute(interaction: CommandInteraction): Promise<void> {
+        await handleCommandInteraction(interaction);
+        return;
+    },
 
+    async handleSelectMenu(interaction: SelectMenuInteraction, userArray: string[], maxCapacity: number, bookingId: string): Promise<void> {
         let manageState = 'add';
-        let embed = updateEmbed(userArray!, maxCapacity!, manageState);
+        let embed = updateEmbed(userArray, maxCapacity, manageState);
         let buttonRow = updateButtons(manageState);
 
         const message = (await interaction.reply({ embeds: [embed], components: [buttonRow], fetchReply: true })) as Message;
@@ -185,7 +197,7 @@ export default {
             if (buttonInteraction.user.id === interaction.user.id) {
                 switch (buttonInteraction.customId) {
                     case 'completeBooking':
-                        await BookingModel.updateOne({ _id: bookingId }, { $push: { users: await mongoDBFilter(userArray!, bookingId!) } }, { upsert: true });
+                        await BookingModel.updateOne({ _id: bookingId }, { $push: { users: await mongoDBFilter(userArray, bookingId) } }, { upsert: true });
 
                         interaction.followUp({ content: 'Booking Successfully Booked!', ephemeral: true });
                         interaction.deleteReply();
@@ -193,7 +205,7 @@ export default {
                     case 'addCollaborators':
                     case 'removeCollaborators':
                         manageState = buttonInteraction.customId === 'addCollaborators' ? 'add' : 'remove';
-                        embed = updateEmbed(userArray!, maxCapacity!, manageState);
+                        embed = updateEmbed(userArray, maxCapacity, manageState);
                         buttonRow = updateButtons(manageState);
 
                         buttonInteraction.update({ embeds: [embed], components: [buttonRow] });
@@ -217,20 +229,20 @@ export default {
                 for (const mentionedUser of mentionedUsers) {
                     switch (manageState) {
                         case 'add':
-                            if (maxCapacity! - userArray!.length > 0) {
-                                if (!userArray!.includes(mentionedUser[0])) {
-                                    userArray!.push(mentionedUser[0]);
+                            if (maxCapacity - userArray.length > 0) {
+                                if (!userArray.includes(mentionedUser[0])) {
+                                    userArray.push(mentionedUser[0]);
                                 }
                             } else {
                                 interaction.followUp({ content: 'There are no more available spaces left for additional members!', ephemeral: true });
                             }
                             break;
                         case 'remove':
-                            if (userArray!.includes(mentionedUser[0])) {
+                            if (userArray.includes(mentionedUser[0])) {
                                 if (interaction.user.id === mentionedUser[0]) {
                                     interaction.followUp({ content: "You can't remove yourself!", ephemeral: true });
                                 } else {
-                                    userArray!.splice(userArray!.indexOf(mentionedUser[0]), 1);
+                                    userArray.splice(userArray.indexOf(mentionedUser[0]), 1);
                                 }
                             }
                             break;
@@ -238,7 +250,7 @@ export default {
                             console.log('manageState not found!');
                     }
                 }
-                const userEmbed = updateEmbed(userArray!, maxCapacity!, manageState);
+                const userEmbed = updateEmbed(userArray, maxCapacity, manageState);
 
                 interaction.editReply({ embeds: [userEmbed] });
             }

@@ -51,15 +51,15 @@ async function parseCommandOptions(interaction: CommandInteraction): Promise<str
     const roomName = interaction.options.getString('room-name');
     const roomJson = await RoomModel.findOne({ name: roomName !== null ? roomName : undefined });
 
-    if (roomJson === null) {
+    if (!roomJson) {
         interaction.reply({ content: 'Invalid Room: Do `/rooms` to see all avaliable rooms!', ephemeral: true });
         return undefined;
     }
 
-    const sectionJson = await SectionModel.find({ roomId: roomJson!._id });
+    const sectionJson = await SectionModel.find({ roomId: roomJson._id });
     const specificSection = sectionJson.find((s) => s.name === interaction.options.getString('section-name'));
 
-    if (specificSection === undefined) {
+    if (!specificSection) {
         interaction.reply({ content: 'Invalid Section: Do `/rooms` to see all avaliable rooms and sections!', ephemeral: true });
         return undefined;
     }
@@ -192,76 +192,82 @@ export default {
         const selectMenuCollector = message.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 120000 });
 
         selectMenuCollector.on('collect', async (menuInteraction: SelectMenuInteraction) => {
-            switch (menuInteraction.customId) {
-                case 'dateSelectMenu': {
-                    menuSelectedDate = menuInteraction.values[0];
-                    selectMenuDate = new MessageActionRow().addComponents(
-                        new MessageSelectMenu().setCustomId('dateSelectMenu').setPlaceholder('Select Date of Room Booking').addOptions(getDateOptions(menuSelectedDate))
-                    );
-                    const avaliableTimeblocks = new MessageActionRow().addComponents(parseTimeblocks(await searchTimeblocks(menuSelectedDate, sectionInformation!, roomInformation!)));
+            //Temporary check as message isn't ephemeral
+            if (menuInteraction.user.id === interaction.user.id) {
+                switch (menuInteraction.customId) {
+                    case 'dateSelectMenu': {
+                        menuSelectedDate = menuInteraction.values[0];
+                        selectMenuDate = new MessageActionRow().addComponents(
+                            new MessageSelectMenu().setCustomId('dateSelectMenu').setPlaceholder('Select Date of Room Booking').addOptions(getDateOptions(menuSelectedDate))
+                        );
+                        const avaliableTimeblocks = new MessageActionRow().addComponents(parseTimeblocks(await searchTimeblocks(menuSelectedDate, sectionInformation!, roomInformation!)));
 
-                    menuInteraction.update({ components: [selectMenuDate, avaliableTimeblocks] });
-                    break;
-                }
-                case 'timeBlockSelectMenu': {
-                    //ESLint disabled for next line as regex is correct at removing unicode characters. Removes hidden unicode U+200E character that invalidates parseInt()/toJSDate()
-                    const selectedTimeblock = menuInteraction.values[0].split(',').map((element: string) => element.replace(/[^\x00-\x7F]/g, '')); //eslint-disable-line
+                        menuInteraction.update({ components: [selectMenuDate, avaliableTimeblocks] });
+                        break;
+                    }
+                    case 'timeBlockSelectMenu': {
+                        //ESLint disabled for next line as regex is correct at removing unicode characters. Removes hidden unicode U+200E character that invalidates parseInt()/toJSDate()
+                        const selectedTimeblock = menuInteraction.values[0].split(',').map((element: string) => element.replace(/[^\x00-\x7F]/g, '')); //eslint-disable-line
 
-                    const selectedDate = DateTime.fromFormat(menuSelectedDate, 'yyyy-MM-dd', { zone: 'America/Toronto' });
-                    const _startsAt = selectedDate.set({ hour: parseInt(selectedTimeblock[0]) }).toJSDate();
-                    const _endsAt = selectedDate.set({ hour: parseInt(selectedTimeblock[1]) }).toJSDate();
-                    const maxCapacity = parseInt(selectedTimeblock[2]);
+                        const selectedDate = DateTime.fromFormat(menuSelectedDate, 'yyyy-MM-dd', { zone: 'America/Toronto' });
+                        const _startsAt = selectedDate.set({ hour: parseInt(selectedTimeblock[0]) }).toJSDate();
+                        const _endsAt = selectedDate.set({ hour: parseInt(selectedTimeblock[1]) }).toJSDate();
+                        const maxCapacity = parseInt(selectedTimeblock[2]);
 
-                    const foundTimeblock = await TimeblockModel.findOne({ sectionId: Types.ObjectId(_sectionId), startsAt: _startsAt, endsAt: _endsAt });
-                    let bookingId;
+                        const foundTimeblock = await TimeblockModel.findOne({ sectionId: Types.ObjectId(_sectionId), startsAt: _startsAt, endsAt: _endsAt });
+                        let bookingId;
 
-                    if (foundTimeblock) {
-                        const potentialTimeblock = await BookingModel.find({ timeBlock: foundTimeblock!._id, booker: interaction.user.id });
+                        if (foundTimeblock) {
+                            const potentialTimeblock = await BookingModel.findOne({ timeBlock: foundTimeblock!._id, booker: interaction.user.id });
 
-                        //Tests to see if the booking is a repeat booking (same time and same booker)
-                        if (!potentialTimeblock) {
-                            const newBooking = await BookingModel.create({
+                            //Tests to see if the booking is a repeat booking (same time and same booker)
+                            if (!potentialTimeblock) {
+                                const newBooking = await BookingModel.create({
+                                    users: [interaction.user.id],
+                                    timeBlock: foundTimeblock._id,
+                                    booker: interaction.user.id,
+                                });
+
+                                bookingId = newBooking._id;
+
+                                await TimeblockModel.updateOne({ _id: foundTimeblock._id }, { $push: { bookings: newBooking._id } });
+                            } else {
+                                menuInteraction.reply({
+                                    content: 'You already have a booking at this time! Use `/view` to view your bookings or use `/manage` to manage your bookings!',
+                                    ephemeral: true,
+                                });
+                                interaction.deleteReply();
+                                return;
+                            }
+                        } else {
+                            const newTimeBlock = new TimeblockModel({
+                                bookings: [],
+                                sectionId: sectionInformation!._id,
+                                startsAt: _startsAt,
+                                endsAt: _endsAt,
+                            });
+                            // Create new booking and add to database
+                            const firstBooking = await BookingModel.create({
                                 users: [interaction.user.id],
-                                timeBlock: foundTimeblock._id,
+                                timeBlock: newTimeBlock._id,
                                 booker: interaction.user.id,
                             });
 
-                            bookingId = newBooking._id;
-
-                            await TimeblockModel.updateOne({ _id: foundTimeblock._id }, { $push: { bookings: newBooking._id } });
-                        } else {
-                            menuInteraction.reply({ content: 'You already have a booking at this time! Use `/view` to view your bookings or use `/manage` to manage your bookings!', ephemeral: true });
-                            interaction.deleteReply();
-                            return;
+                            // Add the new booking to the bookings array of the new time block
+                            newTimeBlock.bookings.push(firstBooking._id);
+                            bookingId = firstBooking._id;
+                            // Add the new time block to the database
+                            await newTimeBlock.save();
                         }
-                    } else {
-                        const newTimeBlock = new TimeblockModel({
-                            bookings: [],
-                            sectionId: sectionInformation!._id,
-                            startsAt: _startsAt,
-                            endsAt: _endsAt,
-                        });
-                        // Create new booking and add to database
-                        const firstBooking = await BookingModel.create({
-                            users: [interaction.user.id],
-                            timeBlock: newTimeBlock._id,
-                            booker: interaction.user.id,
-                        });
 
-                        // Add the new booking to the bookings array of the new time block
-                        newTimeBlock.bookings.push(firstBooking._id);
-                        bookingId = firstBooking._id;
-                        // Add the new time block to the database
-                        await newTimeBlock.save();
+                        manageCommand.handleSelectMenu(menuInteraction, [interaction.user.id], maxCapacity, bookingId);
+
+                        await interaction.deleteReply();
+                        break;
                     }
-
-                    manageCommand.execute(menuInteraction, [interaction.user.id], maxCapacity, bookingId);
-
-                    await interaction.deleteReply();
-                    break;
+                    default:
+                        console.log('Selected Menu Not Found!');
                 }
-                default:
-                    console.log('Selected Menu Not Found!');
             }
         });
     },
