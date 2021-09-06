@@ -1,20 +1,17 @@
 import e, { Request, Response } from 'express';
-import { Types } from 'mongoose';
-import TimeBlock from '../../../models/timeBlock.model';
+import Booking from '../../../models/booking.model';
 
 const queryBookingsRoute = async (req: Request, res: Response): Promise<void> => {
-    const sectionId = req.query.id;
-    if (sectionId && typeof sectionId === "string") {
-        const sectionObjectId = Types.ObjectId(sectionId);
-        const timeBlocksBooked = await TimeBlock.find({ sectionId: sectionObjectId })
-            .populate('section')
+    const bookerDiscord = req.query.id;
+    if (bookerDiscord && typeof bookerDiscord === "string") {
+        const bookings = await Booking.find({ booker: bookerDiscord })
             .catch((error) => {
                 res.status(404).json({ error });
                 return;
             });
-        res.status(200).json({ timeBlocksBooked });
+        res.status(200).json({ bookings })
     } else {
-        res.status(404).json({ error: "Validation failed, section is not valid" });
+        res.status(404).json({ error: "Validation failed, booker is not valid" });
         return;
     }
 }
