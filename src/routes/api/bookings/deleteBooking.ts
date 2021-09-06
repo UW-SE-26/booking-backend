@@ -6,10 +6,7 @@ const deleteBookingRoute = async (req: Request, res: Response): Promise<void> =>
     const id = req.params.id;
 
     // Retrieves the booking of the given id
-    const booking = await BookingModel.findOne({ _id: id }).catch((error) => {
-        res.status(500).json({ error });
-        return;
-    });
+    const booking = await BookingModel.findOne({ _id: id });
 
     if (!booking) {
         res.status(404);
@@ -19,18 +16,15 @@ const deleteBookingRoute = async (req: Request, res: Response): Promise<void> =>
     // Returns an error if the user deleting the booking is not the same as the user who made the booking
     if (req.userEmail != booking.booker) {
         res.status(403).json({ error: 'user is not the booker of this booking so cannot delete it' });
+        return;
     }
 
     // Retrieves the time block that corresponds to the booking
     const bookingTimeBlock = await TimeBlockModel.findOne({ _id: booking.timeBlock })
-        .populate('bookings')
-        .catch((error) => {
-            res.status(500).json({ error });
-            return;
-        });
+        .populate('bookings');
 
     if (!bookingTimeBlock) {
-        res.status(404);
+        res.status(400);
         return;
     }
 
@@ -47,7 +41,7 @@ const deleteBookingRoute = async (req: Request, res: Response): Promise<void> =>
     // Delete the booking
     await BookingModel.deleteOne({ _id: id });
 
-    res.sendStatus(200);
+    res.sendStatus(204);
 };
 
 export default deleteBookingRoute;
