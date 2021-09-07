@@ -222,7 +222,9 @@ export default {
             if (message.author.id === interaction.user.id) {
                 const mentionedUsers = message.mentions.users;
 
-                if (mentionedUsers.size === 0) return;
+                if (!mentionedUsers.size) {
+                    return;
+                }
 
                 message.delete();
 
