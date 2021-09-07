@@ -1,8 +1,8 @@
-import { Schema, model, Types, Document, PopulatedDoc } from 'mongoose';
+import { Schema, model, Types } from 'mongoose';
 
-interface TimeBlock {
-    users: [String];
-    booker: String;
+export interface TimeBlock {
+    users: [string];
+    booker: string;
     sectionId: Types.ObjectId;
     startsAt: Date;
     endsAt: Date;
