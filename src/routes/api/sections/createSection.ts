@@ -19,10 +19,7 @@ const createSectionRoute = async (req: Request, res: Response): Promise<void> =>
     });
 
     // Retrieve the room with the room id and push the section id into the list of section ids
-    const room = await Room.findOne({ _id: roomObjectId }).catch((error) => {
-        res.status(404).json({ error });
-        return;
-    });
+    const room = await Room.findOne({ _id: roomObjectId });
     if (room) {
         room.sections.push(section.id);
     } else {

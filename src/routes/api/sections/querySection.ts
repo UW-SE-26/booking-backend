@@ -25,8 +25,7 @@ const querySectionRoute = async (req: Request, res: Response): Promise<void> => 
         res.status(404);
         return;
     }
-
-    const start = DateTime.fromISO(String(date));
+    const startDate = DateTime.fromISO(String(date));
 
     // Validates start and end dates
     // Retrieves room that the section corresponds to
@@ -35,64 +34,47 @@ const querySectionRoute = async (req: Request, res: Response): Promise<void> => 
         res.status(400).json({ err: 'Room not found' });
         return;
     }
-    let currHourStart = start;
-    let currHourEnd = currHourStart.plus({ hours: 1 });
+    if (room.closed) {
+        res.status(403).json({ err: 'Room is closed' });
+        return;
+    }
     const bookedTimeBlocks = await timeBlockModel
         .find({
             sectionId: sectionInformation._id,
-            startsAt: { $gte: start.toJSDate() },
-            endsAt: { $lte: end.toJSDate() },
+            startsAt: { $gte: startDate.toJSDate(), $lte: startDate.plus({ days: 1 }).toJSDate() },
         })
         .populate('bookings');
     const timeBlocks = [];
-    while (currHourStart < end) {
-        // Finds schedule start and end for the day that the current hour falls on
-        const currWeekDay = currHourStart.weekday;
-        let scheduleDayStart = 0;
-        let scheduleDayEnd = 0;
-        for (const day of room.schedule) {
-            if (day.dayOfWeek == currWeekDay) {
-                scheduleDayStart = day.start;
-                scheduleDayEnd = day.end;
-            }
+
+    let start = 0,
+        end = 23; //make compiler shut up about being uninitialized
+
+    for (const day of room.schedule) {
+        if (day.dayOfWeek === startDate.weekday) {
+            start = day.start;
+            end = day.end;
+            break;
         }
-
-        // Checks if the hour falls under an open time for the room and if it does adds hour to the list of available times
-        if (!room.closed && currHourStart.weekday == currHourEnd.weekday && currHourStart.hour >= scheduleDayStart && currHourEnd.hour <= scheduleDayEnd) {
-            // Check for time block in database
-            const bookedTimeBlockFound = bookedTimeBlocks.find((bookedTimeBlock) => bookedTimeBlock.startsAt.getTime() === currHourStart.toMillis());
-
-            if (bookedTimeBlockFound) {
-                // If a time block for the current hour does exist
-                const currUserCount = bookedTimeBlockFound.bookings.reduce((total: number, booking: TimeBlock) => total + booking.users.length, 0);
-                const newTimeBlock = {
-                    startsAt: currHourStart.toJSDate(),
-                    endsAt: currHourEnd.toJSDate(),
-                    availableCapacity: sectionInformation.capacity - currUserCount,
-                };
-                timeBlocks.push(newTimeBlock);
-            } else {
-                // If a time block for the current hour does not exist
-                const newTimeBlock = {
-                    startsAt: currHourStart.toJSDate(),
-                    endsAt: currHourEnd.toJSDate(),
-                    availableCapacity: sectionInformation.capacity,
-                };
-                timeBlocks.push(newTimeBlock);
-            }
-        }
-
-        // Increments hour start and end for next iteration
-        currHourStart = currHourStart.plus({ hours: 1 });
-        currHourEnd = currHourEnd.plus({ hours: 1 });
     }
+
+    while (start < end) {
+        const bookedTimeBlock = bookedTimeBlocks.find((timeBlock) => timeBlock.startsAt.getHours() === start);
+        const timeBlock = {
+            booked: bookedTimeBlock != null,
+            startsAt: start,
+            endsAt: start + 1,
+        };
+        timeBlocks.push(timeBlock);
+        start++;
+    }
+
     const section = {
         id: sectionInformation._id,
         name: sectionInformation.name,
         capacity: sectionInformation.capacity,
         availableTimes: timeBlocks,
     };
-    res.status(201).json(section);
+    res.status(200).json(section);
 };
 
 export default querySectionRoute;
