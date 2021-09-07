@@ -10,7 +10,7 @@ const queryBookingsRoute = async (req: Request, res: Response): Promise<void> =>
     let bookings;
     if (userEmail) {
         // If an user's email is included in the query, retrieve the bookings of the and return the bookings
-        bookings = await Booking.find({ users: { $in: [userEmail] }});
+        bookings = await Booking.find({ users: { $in: [userEmail] } });
         res.status(200).json({ bookings });
         return;
     } else {
