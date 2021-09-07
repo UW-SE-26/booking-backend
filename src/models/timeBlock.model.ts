@@ -5,7 +5,6 @@ export interface TimeBlock {
     booker: string;
     sectionId: Types.ObjectId;
     startsAt: Date;
-    endsAt: Date;
 }
 
 const timeBlockSchema = new Schema<TimeBlock>({
@@ -13,7 +12,6 @@ const timeBlockSchema = new Schema<TimeBlock>({
     booker: { type: String, required: true },
     sectionId: Types.ObjectId,
     startsAt: Date,
-    endsAt: Date,
 });
 
 const TimeBlockModel = model<TimeBlock>('TimeBlock', timeBlockSchema);
