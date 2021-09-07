@@ -6,7 +6,7 @@ import authMiddleware from '../../middleware/jwtVerify';
 
 const router = Router();
 
-router.post('/', queryBookingsRoute);
+router.post('/', authMiddleware, queryBookingsRoute);
 router.post('/create', authMiddleware, createBookingRoute);
 router.delete('/delete/:id', authMiddleware, deleteBookingRoute);
 
