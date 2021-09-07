@@ -1,4 +1,4 @@
-import e, { Request, Response } from 'express';
+import { Request, Response } from 'express';
 import Booking from '../../../models/booking.model';
 
 const queryBookingsRoute = async (req: Request, res: Response): Promise<void> => {
