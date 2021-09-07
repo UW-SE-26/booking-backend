@@ -6,11 +6,11 @@ import Booking from '../../../models/booking.model';
  * @author Kevin Wang
  */
 const queryBookingsRoute = async (req: Request, res: Response): Promise<void> => {
-    const bookerDiscord = req.query.id;
-    if (bookerDiscord) {
-        if (typeof bookerDiscord === 'string') {
+    const bookerEmail = req.query.id;
+    if (bookerEmail) {
+        if (typeof bookerEmail === 'string') {
             // If an booker's discord id is included in the query, retrieve the bookings of the and return the booking
-            const bookings = await Booking.find({ booker: bookerDiscord }).catch((error) => {
+            const bookings = await Booking.find({ booker: bookerEmail }).catch((error) => {
                 res.status(404).json({ error });
                 return;
             });
