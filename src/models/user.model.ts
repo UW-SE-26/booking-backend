@@ -34,8 +34,8 @@ const userSchema = new Schema<User>({
     program: {
         type: String,
         enum: ['SE', 'ECE'],
-        default: 'SE'
-    }
+        default: 'SE',
+    },
 });
 
 const userModel = model<User>('User', userSchema);

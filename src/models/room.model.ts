@@ -28,8 +28,8 @@ const roomSchema = new Schema<Room>({
     program: {
         type: String,
         enum: ['SE', 'ECE'],
-        default: 'SE'
-    }
+        default: 'SE',
+    },
 });
 
 const room = model<Room>('Room', roomSchema);
