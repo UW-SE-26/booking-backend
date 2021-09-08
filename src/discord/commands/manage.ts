@@ -1,34 +1,13 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-import { ButtonInteraction, CommandInteraction, MessageEmbed, MessageActionRow, MessageButton, Message, SelectMenuInteraction } from 'discord.js';
-import { Types } from 'mongoose';
-import TimeblockModel from '../../models/timeBlock.model';
-import BookingModel from '../../models/booking.model';
-=======
 import { ButtonInteraction, CommandInteraction, Message, MessageActionRow, MessageButton, MessageEmbed, SelectMenuInteraction } from 'discord.js';
 import { Types } from 'mongoose';
 import TimeblockModel from '../../models/timeBlock.model';
->>>>>>> d6cc29eeb4c7195c61d313ede6f348c971962452
-=======
-import { ButtonInteraction, CommandInteraction, Message, MessageActionRow, MessageButton, MessageEmbed, SelectMenuInteraction } from 'discord.js';
-import { Types } from 'mongoose';
-import TimeblockModel from '../../models/timeBlock.model';
->>>>>>> ac75d1419ee06f6c0c0d04a43b4d56d3aecbbf6b
 import SectionModel from '../../models/section.model';
 
 function updateEmbed(userArray: string[], maxCapacity: number, manageState: string) {
     const embedTitle = manageState === 'add' ? 'Adding' : 'Removing';
     const preposition = manageState === 'add' ? 'to' : 'from';
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    const embed = new MessageEmbed()
-=======
     return new MessageEmbed()
->>>>>>> d6cc29eeb4c7195c61d313ede6f348c971962452
-=======
-    return new MessageEmbed()
->>>>>>> ac75d1419ee06f6c0c0d04a43b4d56d3aecbbf6b
         .setColor('#48d7fb')
         .setTitle(`Currently ${embedTitle} Collaborators`)
         .setDescription(
@@ -36,14 +15,6 @@ function updateEmbed(userArray: string[], maxCapacity: number, manageState: stri
                 maxCapacity - userArray.length
             } available spaces left):\n${userArray.map((user) => `<@!${user}>`).join('\n')}`
         );
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-    return embed;
-=======
->>>>>>> d6cc29eeb4c7195c61d313ede6f348c971962452
-=======
->>>>>>> ac75d1419ee06f6c0c0d04a43b4d56d3aecbbf6b
 }
 
 function updateButtons(manageState: string) {
@@ -56,23 +27,10 @@ function updateButtons(manageState: string) {
     return new MessageActionRow().addComponents(buttonRow);
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-async function mongoDBFilter(userArray: string[], bookingId: string) {
-    //Ensures no duplicate members are listed under users of a certain booking
-    const filterArray = [];
-    const currentUserArray = (await BookingModel.findOne({ _id: Types.ObjectId(bookingId) }))!.users;
-=======
-=======
->>>>>>> ac75d1419ee06f6c0c0d04a43b4d56d3aecbbf6b
 async function mongoDBFilter(userArray: string[], timeblockId: string) {
     //Ensures no duplicate members are listed under users of a certain booking
     const filterArray = [];
     const currentUserArray = (await TimeblockModel.findOne({ _id: Types.ObjectId(timeblockId) }))!.users;
-<<<<<<< HEAD
->>>>>>> d6cc29eeb4c7195c61d313ede6f348c971962452
-=======
->>>>>>> ac75d1419ee06f6c0c0d04a43b4d56d3aecbbf6b
 
     for (const user of userArray) {
         if (!currentUserArray.includes(user)) {
@@ -83,60 +41,23 @@ async function mongoDBFilter(userArray: string[], timeblockId: string) {
 }
 
 async function handleCommandInteraction(interaction: CommandInteraction) {
-<<<<<<< HEAD
-<<<<<<< HEAD
-    const bookingId = interaction.options.getString('booking-id', true);
-    //Regex filters out invalid booking ID formats
-    const hexRegex = /[0-9A-Fa-f]{6}/g;
-
-    if (!hexRegex.test(bookingId)) {
-=======
-=======
->>>>>>> ac75d1419ee06f6c0c0d04a43b4d56d3aecbbf6b
     const timeblockId = interaction.options.getString('booking-id', true);
     //Regex filters out invalid booking ID formats
     const hexRegex = /[0-9A-Fa-f]{6}/g;
 
     if (!hexRegex.test(timeblockId)) {
-<<<<<<< HEAD
->>>>>>> d6cc29eeb4c7195c61d313ede6f348c971962452
-=======
->>>>>>> ac75d1419ee06f6c0c0d04a43b4d56d3aecbbf6b
         interaction.reply({ content: 'Invalid Booking ID Format: Do `/view` to see all your current bookings!', ephemeral: true });
         return;
     }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    const bookedBooking = await BookingModel.findOne({ _id: Types.ObjectId(bookingId) });
-=======
     const bookedBooking = await TimeblockModel.findOne({ _id: Types.ObjectId(timeblockId) });
->>>>>>> d6cc29eeb4c7195c61d313ede6f348c971962452
-=======
-    const bookedBooking = await TimeblockModel.findOne({ _id: Types.ObjectId(timeblockId) });
->>>>>>> ac75d1419ee06f6c0c0d04a43b4d56d3aecbbf6b
 
     if (!bookedBooking) {
         interaction.reply({ content: 'Invalid Booking ID: Do `/view` to see all your current bookings!', ephemeral: true });
         return;
     }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    const bookedTimeblock = await TimeblockModel.findOne({ _id: bookedBooking.timeBlock });
-
-    if (!bookedTimeblock) {
-        interaction.reply({ content: 'Timeblock not found! Please contact an admin.', ephemeral: true });
-        return;
-    }
-
-    const bookedSection = await SectionModel.findOne({ _id: bookedTimeblock.sectionId });
-=======
     const bookedSection = await SectionModel.findOne({ _id: bookedBooking.sectionId });
->>>>>>> d6cc29eeb4c7195c61d313ede6f348c971962452
-=======
-    const bookedSection = await SectionModel.findOne({ _id: bookedBooking.sectionId });
->>>>>>> ac75d1419ee06f6c0c0d04a43b4d56d3aecbbf6b
 
     if (!bookedSection) {
         interaction.reply({ content: 'Section not found! Please contact an admin.', ephemeral: true });
@@ -266,15 +187,7 @@ export default {
             if (buttonInteraction.user.id === interaction.user.id) {
                 switch (buttonInteraction.customId) {
                     case 'completeBooking':
-<<<<<<< HEAD
-<<<<<<< HEAD
-                        await BookingModel.updateOne({ _id: bookingId }, { $push: { users: await mongoDBFilter(userArray, bookingId) } }, { upsert: true });
-=======
                         await TimeblockModel.updateOne({ _id: bookingId }, { $push: { users: await mongoDBFilter(userArray, bookingId) } }, { upsert: true });
->>>>>>> d6cc29eeb4c7195c61d313ede6f348c971962452
-=======
-                        await TimeblockModel.updateOne({ _id: bookingId }, { $push: { users: await mongoDBFilter(userArray, bookingId) } }, { upsert: true });
->>>>>>> ac75d1419ee06f6c0c0d04a43b4d56d3aecbbf6b
 
                         interaction.followUp({ content: 'Booking Successfully Booked!', ephemeral: true });
                         interaction.deleteReply();
