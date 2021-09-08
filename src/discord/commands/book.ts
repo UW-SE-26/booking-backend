@@ -1,4 +1,4 @@
-import { CommandInteraction, MessageEmbed, MessageActionRow, MessageSelectMenu, MessageButton, ButtonInteraction, SelectMenuInteraction, Message } from 'discord.js';
+import { CommandInteraction, MessageEmbed, MessageActionRow, MessageSelectMenu, MessageButton, SelectMenuInteraction, Message } from 'discord.js';
 import RoomModel, { Room } from '../../models/room.model';
 import SectionModel, { Section } from '../../models/section.model';
 import TimeblockModel from '../../models/timeBlock.model';
@@ -164,7 +164,7 @@ export default {
         },
     ],
 
-    async execute(interaction: CommandInteraction | ButtonInteraction, _roomId?: string, _sectionId?: string): Promise<void> {
+    async execute(interaction: CommandInteraction | SelectMenuInteraction, _roomId?: string, _sectionId?: string): Promise<void> {
         if (interaction.isCommand()) {
             await parseCommandOptions(interaction).then((response) => {
                 if (response === undefined) return;
@@ -268,6 +268,8 @@ export default {
                     default:
                         console.log('Selected Menu Not Found!');
                 }
+            } else {
+                menuInteraction.reply({ content: "This select menu isn't for you!", ephemeral: true });
             }
         });
     },
