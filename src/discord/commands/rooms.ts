@@ -4,7 +4,7 @@ import Room from '../../models/room.model';
 import Section from '../../models/section.model';
 import bookCommand from '../../discord/commands/book';
 
-async function retrieveRooms(seletedRoomId?: string) {
+async function retrieveRooms(selectedRoomId?: string) {
     const rooms = [];
     const roomsJson = await Room.find({});
 
@@ -13,7 +13,7 @@ async function retrieveRooms(seletedRoomId?: string) {
             rooms.push({
                 label: room.name !== undefined ? room.name : `Room ${String(room._id)}`,
                 value: String(room._id),
-                default: String(room._id) === seletedRoomId ? true : false,
+                default: String(room._id) === selectedRoomId,
             });
         }
     }
@@ -41,11 +41,11 @@ async function retrieveSections(selectedRoomId: string) {
 
 export default {
     name: 'rooms',
-    description: 'View all avaliable rooms and sections for booking',
+    description: 'View all available rooms and sections for booking',
     options: [],
 
     async execute(interaction: CommandInteraction): Promise<void> {
-        const embed = new MessageEmbed().setColor('#48d7fb').setTitle('View All Avaliable Rooms').setDescription('Here are all the rooms currently avaliable for booking!ㅤㅤㅤㅤ');
+        const embed = new MessageEmbed().setColor('#48d7fb').setTitle('View All Available Rooms').setDescription('Here are all the rooms currently available for booking!ㅤㅤㅤㅤ');
         const selectMenu = new MessageActionRow().addComponents(
             new MessageSelectMenu()
                 .setCustomId('roomSelectMenu')
@@ -56,25 +56,25 @@ export default {
         const message = (await interaction.reply({ embeds: [embed], components: [selectMenu], ephemeral: false, fetchReply: true })) as Message;
 
         const selectMenuCollector = message.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 120000 });
-        let selectedroomId: string;
+        let selectedRoomId: string;
 
         selectMenuCollector.on('collect', async (menuInteraction: SelectMenuInteraction) => {
             if (menuInteraction.user.id === interaction.user.id) {
                 switch (menuInteraction.customId) {
                     case 'roomSelectMenu': {
-                        selectedroomId = menuInteraction.values[0];
+                        selectedRoomId = menuInteraction.values[0];
 
-                        const roomSelectMenu = new MessageActionRow().addComponents(new MessageSelectMenu().setCustomId('roomSelectMenu').addOptions(await retrieveRooms(selectedroomId)));
-                        const sectionSelectMenu = new MessageActionRow().addComponents(await retrieveSections(selectedroomId));
+                        const roomSelectMenu = new MessageActionRow().addComponents(new MessageSelectMenu().setCustomId('roomSelectMenu').addOptions(await retrieveRooms(selectedRoomId)));
+                        const sectionSelectMenu = new MessageActionRow().addComponents(await retrieveSections(selectedRoomId));
 
                         menuInteraction.update({ components: [roomSelectMenu, sectionSelectMenu] });
                         break;
                     }
                     case 'sectionSelectMenu': {
                         //ESLint disabled for next line as regex is correct at removing unicode characters. Removes hidden unicode U+200E character that invalidates ObjectId casting
-                        const selectedsectionId = menuInteraction.values[0].replace(/[^\x00-\x7F]/g, ''); //eslint-disable-line
+                        const selectionSectionId = menuInteraction.values[0].replace(/[^\x00-\x7F]/g, ''); //eslint-disable-line
 
-                        bookCommand.execute(menuInteraction, selectedroomId, selectedsectionId);
+                        bookCommand.execute(menuInteraction, selectedRoomId, selectionSectionId);
                         await interaction.deleteReply();
                         break;
                     }
