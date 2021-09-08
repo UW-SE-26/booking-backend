@@ -3,8 +3,8 @@ import TimeBlock from '../../../models/timeBlock.model';
 import Section from '../../../models/section.model';
 
 const createBookingRoute = async (req: Request, res: Response): Promise<void> => {
-    const { sectionId, userEmails, bookerEmail, startAt } = req.body;
-
+    const { sectionId, userEmails, startAt } = req.body;
+    const bookerEmail = req.userEmail;
     // Validating for time block nullability
     const timeBlockRetrieved = await TimeBlock.findOne({ sectionId: sectionId, startAt: startAt });
     if (timeBlockRetrieved) {

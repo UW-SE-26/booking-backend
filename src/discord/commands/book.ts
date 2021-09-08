@@ -1,15 +1,15 @@
 import { CommandInteraction, MessageEmbed, MessageActionRow, MessageSelectMenu, MessageButton, ButtonInteraction, SelectMenuInteraction, Message } from 'discord.js';
 import roomModel, { Room } from '../../models/room.model';
 import sectionModel, { Section } from '../../models/section.model';
-import Timeblock from '../../models/timeBlock.model';
 import { DateTime } from 'luxon';
 import { Types } from 'mongoose';
-import { Booking } from '../../models/booking.model';
+import timeBlockModel from '../../models/timeBlock.model';
 
 interface TimeblockInformation {
-    startsAt: Date;
-    endsAt: Date;
-    availableCapacity: number;
+    booked: boolean;
+    startsAt: number;
+    endsAt: number;
+    date: Date;
 }
 
 interface SectionInformation extends Section {
@@ -38,7 +38,7 @@ function getDateOptions(selectedDate?: string) {
         dateOptions.push({
             label: `${currentDate.weekdayLong} - ${currentDate.monthLong} ${currentDate.day}${dateSuffix(currentDate.day)}`,
             value: currentDate.toISODate(),
-            default: currentDate.toISODate() === selectedDate ? true : false,
+            default: currentDate.toISODate() === selectedDate,
         });
         currentDate = currentDate.plus({ days: 1 });
     }
@@ -66,64 +66,57 @@ async function parseCommandOptions(interaction: CommandInteraction): Promise<str
     return [roomJson._id, specificSection._id];
 }
 
-async function searchTimeblocks(selectedDate: string, sectionInformation: SectionInformation, roomInformation: Room) {
+async function searchTimeblocks(selectedDate: string, sectionInformation: SectionInformation, roomInformation: Room): Promise<TimeblockInformation[]> {
     //Function finds all available timeblocks for a given date
 
-    const currentDate = DateTime.now().setZone('America/Toronto');
-    const nextHour = currentDate.toISODate() === selectedDate ? currentDate.hour + 1 : 0;
+    const startDate = DateTime.fromISO(String(selectedDate));
 
-    const startDate = DateTime.fromISO(selectedDate, { zone: 'America/Toronto' }).set({ hour: nextHour });
-    const endDate = DateTime.fromISO(selectedDate, { zone: 'America/Toronto' }).set({ hour: 23 });
-
-    const bookedTimeblocks = await Timeblock.find({
-        sectionId: sectionInformation._id,
-        startsAt: { $gte: startDate.toJSDate() },
-        endsAt: { $lte: endDate.toJSDate() },
-    });
-
-    const timeBlocks = [];
-    let currHourStart = startDate;
-    let currHourEnd = currHourStart.plus({ hours: 1 });
-
-    // Iterate through the hours in the given time range
-    while (currHourStart < endDate) {
-        // Finds schedule start and end for the day that the current hour falls on and assigns the appropriate hours for scheduleDayStart and scheduleDayEnd
-        const { start: scheduleDayStart, end: scheduleDayEnd } = roomInformation.schedule.find((day) => day.dayOfWeek + 1 === currHourStart.weekday) ?? { start: 0, end: 0 };
-
-        // Checks if the hour falls under an open time for the room and if it does adds hour to the list of available times
-        if (!roomInformation.closed && currHourStart.weekday === currHourEnd.weekday && currHourStart.hour >= scheduleDayStart && currHourEnd.hour <= scheduleDayEnd) {
-            // Check for time block in database
-            const bookedTimeBlockFound = bookedTimeblocks.find((bookedTimeBlock) => bookedTimeBlock.startsAt.getTime() === currHourStart.toMillis());
-
-            if (bookedTimeBlockFound) {
-                // If a time block for the current hour does exist
-                const currUserCount = bookedTimeBlockFound.bookings.reduce((total: number, booking: Booking) => (total += booking.users.length), 0);
-                const newTimeBlock = {
-                    startsAt: currHourStart.toJSDate(),
-                    endsAt: currHourEnd.toJSDate(),
-                    availableCapacity: sectionInformation.capacity - currUserCount,
-                };
-                timeBlocks.push(newTimeBlock);
-            } else {
-                const newTimeBlock = {
-                    startsAt: currHourStart.toJSDate(),
-                    endsAt: currHourEnd.toJSDate(),
-                    availableCapacity: sectionInformation.capacity,
-                };
-                timeBlocks.push(newTimeBlock);
-            }
-        }
-
-        // Increments hour start and end for next iteration
-        currHourStart = currHourStart.plus({ hours: 1 });
-        currHourEnd = currHourEnd.plus({ hours: 1 });
+    // Validates start and end dates
+    // Retrieves room that the section corresponds to
+    if (!roomInformation) {
+        return [];
     }
+    if (roomInformation.closed) {
+        return [];
+    }
+
+    const bookedTimeBlocks = await timeBlockModel
+        .find({
+            sectionId: sectionInformation._id,
+            startsAt: { $gte: startDate.toJSDate(), $lte: startDate.plus({ days: 1 }).toJSDate() },
+        })
+        .populate('bookings');
+    const timeBlocks: TimeblockInformation[] = [];
+
+    let start = 0,
+        end = 23; //make compiler shut up about being uninitialized
+
+    for (const day of roomInformation.schedule) {
+        if (day.dayOfWeek === startDate.weekday) {
+            start = day.start;
+            end = day.end;
+            break;
+        }
+    }
+
+    while (start < end) {
+        const bookedTimeBlock = bookedTimeBlocks.find((timeBlock) => timeBlock.startsAt.getHours() === start);
+        const timeBlock = {
+            booked: bookedTimeBlock != null,
+            date: startDate.toJSDate(),
+            startsAt: start,
+            endsAt: start + 1,
+        };
+        timeBlocks.push(timeBlock);
+        start++;
+    }
+
     return timeBlocks;
 }
 
-function timeConversion(timeObject: Date) {
+function timeConversion(time: number, date: Date) {
     //Converts 24 hour time to 12 hour time with a.m. and p.m. and changes 0:00 to 12:00
-    return DateTime.fromJSDate(timeObject, { zone: 'America/Toronto' }).toFormat('h:mm a');
+    return date.toISOString() + (time > 12 ? `${time - 12}:00 PM` : `${time}:00 AM`);
 }
 
 function parseTimeblocks(timeBlocks: TimeblockInformation[]) {
@@ -131,8 +124,8 @@ function parseTimeblocks(timeBlocks: TimeblockInformation[]) {
     const timeBlockOptions = [];
     for (const timeBlock of timeBlocks) {
         timeBlockOptions.push({
-            label: `${timeConversion(timeBlock.startsAt)} - ${timeConversion(timeBlock.endsAt)}`,
-            value: `${timeConversion(timeBlock.startsAt)} - ${timeConversion(timeBlock.endsAt)}`,
+            label: `${timeConversion(timeBlock.startsAt, timeBlock.date)} - ${timeConversion(timeBlock.endsAt, timeBlock.date)}`,
+            value: `${timeConversion(timeBlock.startsAt, timeBlock.date)} - ${timeConversion(timeBlock.endsAt, timeBlock.date)}`,
         });
     }
 
