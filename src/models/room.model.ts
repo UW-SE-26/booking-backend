@@ -31,10 +31,7 @@ const roomSchema = new Schema<Room>({
         enum: ['SE', 'ECE'],
         default: 'SE',
     },
-<<<<<<< HEAD
-=======
     images: [String],
->>>>>>> ac75d1419ee06f6c0c0d04a43b4d56d3aecbbf6b
 });
 
 const room = model<Room>('Room', roomSchema);
