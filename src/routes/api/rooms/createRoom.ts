@@ -1,10 +1,6 @@
 import { Request, Response } from 'express';
 import Room from '../../../models/room.model';
 
-/**
- * Route to create a room
- * @author Kevin Wang
- */
 const createRoomRoute = async (req: Request, res: Response): Promise<void> => {
     // Get data from request and validate data
     const { name, schedule, closed } = req.body;

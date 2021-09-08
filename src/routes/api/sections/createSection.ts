@@ -3,11 +3,6 @@ import { Types } from 'mongoose';
 import Section from '../../../models/section.model';
 import Room from '../../../models/room.model';
 
-/**
- * Route to create a section
- * @author Kevin Wang
- */
-
 const createSectionRoute = async (req: Request, res: Response): Promise<void> => {
     // Get data from request and create section
     const { name, capacity, roomId } = req.body;
