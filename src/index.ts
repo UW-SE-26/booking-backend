@@ -3,10 +3,12 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import apiRoutes from './routes/api';
+import schedule from 'node-schedule';
 import { JWTPayload } from 'jose/webcrypto/types';
 import { init as initDiscord } from './discord';
 
 import './util/keypair'; //Make sure pub/priv keygen is done
+import TimeBlock from './models/timeBlock.model';
 
 // Merged declaration of Request
 declare module 'express-serve-static-core' {
@@ -44,3 +46,10 @@ mongoose
 if (process.env.ENABLE_DISCORD_BOT === 'true' && process.env.DISCORD_TOKEN !== undefined) {
     initDiscord();
 }
+
+// Scheduling an autodelete task that runs every day at 00:00
+const job = schedule.scheduleJob('*0 0 * * *', async function () {
+    const currDate = new Date();
+    currDate.setDate(currDate.getDate() - 7);
+    await TimeBlock.deleteMany({ startsAt: { $lt: currDate } });
+});
