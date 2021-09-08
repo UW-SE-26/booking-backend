@@ -13,7 +13,7 @@ export async function resetPasswordRoute(req: Request, res: Response): Promise<v
         return;
     }
 
-    const emailCode = crypto.randomBytes(64).toString('hex');
+    const emailCode = crypto.randomBytes(8).toString('hex');
     user.resetCode = emailCode;
     user.resetAt = Date.now();
 
@@ -22,7 +22,7 @@ export async function resetPasswordRoute(req: Request, res: Response): Promise<v
     sendEmail({
         to: req.body.email,
         subject: 'Reset your password',
-        text: `TODO here's your password reset code ${emailCode} if you didn't send this then disregard, why would someone try to hack an account that books study spaces`,
+        text: `Your password reset code is ${emailCode}. If you didn't request a password reset, then please disregard this message. TODO frontend link here`,
     }).then(() => console.log(`Reset code sent to ${req.body.email}`));
 
     res.json({
