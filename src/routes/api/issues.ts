@@ -27,16 +27,15 @@ const issueRoute = async (req: Request, res: Response): Promise<void> => {
         return;
     }
 
-    const issue = new IssueModel({
+    const issue = await IssueModel.create({
         reportingUserEmail: req.userEmail,
         message: message,
         status: 'unresolved',
         bookingId: bookingId,
     });
-    issue.save();
 
     room.issues.push(issue._id);
-    room.save();
+    await room.save();
 
     const possibleTimeBlocks = await TimeBlockModel.find({ sectionId: timeBlock.sectionId, startsAt: { $lte: timeBlock.startsAt } });
     let maxDate = new Date(0);
@@ -54,11 +53,11 @@ const issueRoute = async (req: Request, res: Response): Promise<void> => {
     }
 
     for (const blamedUser of blamedUsers) {
-        sendEmail({
+        await sendEmail({
             to: blamedUser,
             subject: 'Issue Reported',
             text: `An issue was reported for your booking`,
-        }).then(() => console.log(`Verification email sent to ${req.body.email}`));
+        }).catch(() => console.log('issue email to ${blamedUser} failed'));
     }
 
     res.status(201).json({ issue });
