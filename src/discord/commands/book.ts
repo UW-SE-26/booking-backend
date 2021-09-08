@@ -1,9 +1,9 @@
 import { CommandInteraction, MessageEmbed, MessageActionRow, MessageSelectMenu, MessageButton, SelectMenuInteraction, Message } from 'discord.js';
-import RoomModel, { Room } from '../../models/room.model';
-import SectionModel, { Section } from '../../models/section.model';
+import roomModel, { Room } from '../../models/room.model';
+import sectionModel, { Section } from '../../models/section.model';
 import { DateTime } from 'luxon';
 import { Types } from 'mongoose';
-import TimeBlockModel from '../../models/timeBlock.model';
+import timeBlockModel from '../../models/timeBlock.model';
 import manageCommand from './manage';
 
 interface TimeblockInformation {
@@ -49,14 +49,14 @@ function getDateOptions(selectedDate?: string) {
 async function parseCommandOptions(interaction: CommandInteraction): Promise<string[] | undefined> {
     //Parses the book command option parameters to return the corresponding Room's section ID
     const roomName = interaction.options.getString('room-name');
-    const roomJson = await RoomModel.findOne({ name: roomName !== null ? roomName : undefined });
+    const roomJson = await roomModel.findOne({ name: roomName !== null ? roomName : undefined });
 
     if (!roomJson) {
         interaction.reply({ content: 'Invalid Room: Do `/rooms` to see all avaliable rooms!', ephemeral: true });
         return undefined;
     }
 
-    const sectionJson = await SectionModel.find({ roomId: roomJson._id });
+    const sectionJson = await sectionModel.find({ roomId: roomJson._id });
     const specificSection = sectionJson.find((s) => s.name === interaction.options.getString('section-name'));
 
     if (!specificSection) {
@@ -81,7 +81,7 @@ async function searchTimeblocks(selectedDate: string, sectionInformation: Sectio
         return [];
     }
 
-    const bookedTimeBlocks = await TimeBlockModel.find({
+    const bookedTimeBlocks = await timeBlockModel.find({
         sectionId: sectionInformation._id,
         startsAt: { $gte: startDate.toJSDate(), $lte: startDate.plus({ days: 1 }).toJSDate() },
     });
@@ -164,8 +164,8 @@ export default {
 
         if (_roomId === undefined || _sectionId === undefined) return;
 
-        const roomInformation = await RoomModel.findOne({ _id: Types.ObjectId(_roomId) });
-        const sectionInformation = await SectionModel.findOne({ _id: Types.ObjectId(_sectionId) });
+        const roomInformation = await roomModel.findOne({ _id: Types.ObjectId(_roomId) });
+        const sectionInformation = await sectionModel.findOne({ _id: Types.ObjectId(_sectionId) });
 
         const embed = new MessageEmbed()
             .setColor('#48d7fb')
@@ -202,7 +202,7 @@ export default {
                         const _startsAt = selectedDate.set({ hour: parseInt(selectedTimeblock[0]) }).toJSDate();
                         const maxCapacity = parseInt(selectedTimeblock[2]);
 
-                        const foundTimeblock = await TimeBlockModel.findOne({ sectionId: Types.ObjectId(_sectionId), startsAt: _startsAt });
+                        const foundTimeblock = await timeBlockModel.findOne({ sectionId: Types.ObjectId(_sectionId), startsAt: _startsAt });
                         let bookingId;
 
                         const hour = selectedDate.hour;
@@ -210,7 +210,7 @@ export default {
                         const validBooking = hour < schedule.start || hour > schedule.end;
 
                         if (!foundTimeblock && validBooking) {
-                            const timeBlock = await TimeBlockModel.create({
+                            const timeBlock = await timeBlockModel.create({
                                 users: [interaction.user.id],
                                 booker: interaction.user.id,
                                 sectionId: Types.ObjectId(_sectionId),
