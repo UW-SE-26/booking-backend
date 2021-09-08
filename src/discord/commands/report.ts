@@ -64,7 +64,7 @@ export default {
         let selectedroomId: string;
         let selectedsectionId: string;
         let roomSelectMenu: MessageActionRow;
-        let issueMessage = '';
+        let issueMessage: string;
 
         selectMenuCollector.on('collect', async (menuInteraction: SelectMenuInteraction) => {
             if (menuInteraction.user.id === interaction.user.id) {
@@ -102,6 +102,11 @@ export default {
 
         buttonCollector.on('collect', async (buttonInteraction: ButtonInteraction) => {
             if (buttonInteraction.user.id === interaction.user.id) {
+                if (!issueMessage) {
+                    buttonInteraction.reply({ content: 'No description provided. Please type a description of the issue in chat.', ephemeral: true });
+                    return;
+                }
+
                 messageCollector.stop();
 
                 const newIssue = await IssueModel.create({
