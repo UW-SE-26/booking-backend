@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import User from '../../../models/user.model';
 import argon2 from 'argon2';
 import crypto from 'crypto';
-// import sendEmail from '../../../util/email';
+import sendEmail from '../../../util/email';
 
 const registerRoute = async (req: Request, res: Response): Promise<void> => {
     const user = await User.findOne({ email: req.body.email });
@@ -35,13 +35,11 @@ const registerRoute = async (req: Request, res: Response): Promise<void> => {
 
     console.log(`User ${req.body.email} registered`);
 
-    // Temporarily disabled email service
-    // Will be added after email verification is set up
-    /* sendEmail({
+    sendEmail({
         to: req.body.email,
         subject: 'Verify SE Spaces Booking Email Address',
         text: `TODO your code is ${emailCode} this should be a frontend link here`,
-    }).then(() => console.log(`Verification email sent to ${req.body.email}`)); */
+    }).then(() => console.log(`Verification email sent to ${req.body.email}`));
 
     res.json({
         success: true,
