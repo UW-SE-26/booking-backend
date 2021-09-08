@@ -28,10 +28,7 @@ const createRoomRoute = async (req: Request, res: Response): Promise<void> => {
         schedule,
         closed,
     });
-    await room.save().catch((error) => {
-        res.status(400).json({ error });
-        return;
-    });
+    await room.save();
     res.status(201).json({ room });
 };
 

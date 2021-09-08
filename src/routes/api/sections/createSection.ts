@@ -28,14 +28,8 @@ const createSectionRoute = async (req: Request, res: Response): Promise<void> =>
     }
 
     // Save room and sections
-    await room.save().catch((error) => {
-        res.status(400).json({ error });
-        return;
-    });
-    await section.save().catch((error) => {
-        res.status(400).json({ error });
-        return;
-    });
+    await room.save();
+    await section.save();
     res.status(201).json({ section });
 };
 
