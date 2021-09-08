@@ -1,6 +1,5 @@
 import { CommandInteraction, MessageButton, MessageEmbed, MessageActionRow, MessageSelectMenu, Message, SelectMenuInteraction } from 'discord.js';
 import TimeblockModel from '../../models/timeBlock.model';
-import BookingModel from '../../models/booking.model';
 import SectionModel from '../../models/section.model';
 import RoomModel from '../../models/room.model';
 import { DateTime } from 'luxon';
@@ -25,20 +24,14 @@ function timeConversion(timeObject: DateTime) {
     return timeObject.setZone('America/Toronto').toFormat('h:mm a');
 }
 
-async function getBookingInformation(bookingId: string) {
-    const bookedBooking = await BookingModel.findOne({ _id: Types.ObjectId(bookingId) });
+async function getBookingInformation(timeBlockId: string) {
+    const bookedBooking = await TimeblockModel.findOne({ _id: Types.ObjectId(timeBlockId) });
 
     if (!bookedBooking) {
         return undefined;
     }
 
-    const bookedTimeblock = await TimeblockModel.findOne({ _id: bookedBooking.timeBlock });
-
-    if (!bookedTimeblock) {
-        return undefined;
-    }
-
-    const bookedSection = await SectionModel.findOne({ _id: bookedTimeblock.sectionId });
+    const bookedSection = await SectionModel.findOne({ _id: bookedBooking.sectionId });
 
     if (!bookedSection) {
         return undefined;
@@ -50,14 +43,13 @@ async function getBookingInformation(bookingId: string) {
         return undefined;
     }
 
-    const _startDate = DateTime.fromJSDate(bookedTimeblock.startsAt).setZone('America/Toronto');
-    const _endDate = DateTime.fromJSDate(bookedTimeblock.endsAt).setZone('America/Toronto');
+    const _startDate = DateTime.fromJSDate(bookedBooking.startsAt).setZone('America/Toronto');
 
     return {
         roomName: bookedRoom.name,
         sectionName: bookedSection.name,
         startDate: _startDate,
-        endDate: _endDate,
+        endDate: _startDate.plus({ hours: 1 }),
         bookingUsers: bookedBooking.users,
         booker: bookedBooking.booker,
         bookingId: bookedBooking._id,
@@ -66,7 +58,7 @@ async function getBookingInformation(bookingId: string) {
 
 async function getUserBookings(userId: string) {
     const bookingOptions = [];
-    const bookedBookings = await BookingModel.find({ users: userId });
+    const bookedBookings = await TimeblockModel.find({ users: { $in: [userId] } });
 
     for (const booking of bookedBookings) {
         const label = booking.booker === userId ? 'Booked' : 'Invited';
@@ -80,7 +72,7 @@ async function getUserBookings(userId: string) {
             label: `${label}: ${bookingInformation.roomName} - ${bookingInformation.sectionName}`,
             description: `${bookingInformation.startDate.weekdayLong} - ${bookingInformation.startDate.monthLong} ${bookingInformation.startDate.day}${dateSuffix(
                 bookingInformation.startDate.day
-            )}:‏‏‎ ‎‏‏‎${timeConversion(bookingInformation.startDate)} - ${timeConversion(bookingInformation.endDate)}`,
+            )}:${timeConversion(bookingInformation.startDate)} - ${timeConversion(bookingInformation.endDate)}`,
             value: `${bookingInformation.bookingId}`,
         });
     }
@@ -126,10 +118,7 @@ export default {
                 .addField('Day of Week:', `${bookingInformation.startDate.weekdayLong}`, true)
                 .addField('Date:', `${bookingInformation.startDate.monthLong} ${bookingInformation.startDate.day}${dateSuffix(bookingInformation.startDate.day)}`, true)
                 .addField('Time:', `${timeConversion(bookingInformation.startDate)} - ${timeConversion(bookingInformation.endDate)}`)
-                .addField(
-                    'Invited Collaborators:‏‏‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎  ‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎‎‏‏‎ ‎‏‏‎‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏‎‎‏‏‎‎‏‏‎ ‎‏‏‎ ‎‏‏‎ ‎‏‏',
-                    `${bookingInformation.bookingUsers.map((user) => `<@!${user}>`).join('\n')}`
-                )
+                .addField('Invited Collaborators:', `${bookingInformation.bookingUsers.map((user) => `<@!${user}>`).join('\n')}`)
                 .setFooter(`Booking ID: ${bookingInformation.bookingId}`);
 
             selectMenuInteraction.reply({ embeds: [informationEmbed], ephemeral: true });
