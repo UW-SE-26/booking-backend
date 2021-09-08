@@ -4,6 +4,6 @@ import Rooms from './rooms';
 import Book from './book';
 import Manage from './manage';
 import View from './view';
-import Report from './report'; 
+import Report from './report';
 
 export default [Deploy, Rooms, Book, Manage, View, Report, Ping];
