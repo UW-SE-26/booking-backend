@@ -26,12 +26,12 @@ const issueRoute = async (req: Request, res: Response): Promise<void> => {
         res.status(400);
         return;
     }
-
+ 
     const issue = new IssueModel({
         reportingUserEmail: req.userEmail,
         message: message,
         status: 'unresolved',
-        bookingId: bookingId,
+        bookingId: bookingId
     });
     issue.save();
 
