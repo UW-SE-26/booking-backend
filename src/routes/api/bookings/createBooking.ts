@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import TimeBlock from '../../../models/timeBlock.model';
 import Section from '../../../models/section.model';
+import Room from '../../../models/room.model';
+import userModel from '../../../models/user.model';
 
 const createBookingRoute = async (req: Request, res: Response): Promise<void> => {
     const { sectionId, userEmails, startAt } = req.body;
@@ -21,6 +23,13 @@ const createBookingRoute = async (req: Request, res: Response): Promise<void> =>
         }
     } else {
         res.status(400).json({ error: 'booking unsuccessful, section does not exist' });
+        return;
+    }
+
+    const room = await Room.findOne({ _id: sectionRetrieved.roomId });
+    const user = await userModel.findOne({ email: bookerEmail });
+    if (room!.program !== user!.program) {
+        res.status(400).json({ error: 'booking unsuccessful, wrong program' });
         return;
     }
 

@@ -1,6 +1,7 @@
 import { Schema, model } from 'mongoose';
 
 interface User {
+    admin: boolean;
     name: string;
     email: string;
     websiteUser: boolean;
@@ -14,6 +15,7 @@ interface User {
 }
 
 const userSchema = new Schema<User>({
+    admin: { type: Boolean, required: true, default: false },
     email: { type: String, required: true },
     websiteUser: { type: Boolean, required: true },
     /*

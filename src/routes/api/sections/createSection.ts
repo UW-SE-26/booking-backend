@@ -2,10 +2,18 @@ import { Request, Response } from 'express';
 import { Types } from 'mongoose';
 import Section from '../../../models/section.model';
 import Room from '../../../models/room.model';
+import userModel from '../../../models/user.model';
 
 const createSectionRoute = async (req: Request, res: Response): Promise<void> => {
     // Get data from request and create section
     const { name, capacity, roomId } = req.body;
+
+    const user = await userModel.findOne({ email: req.userEmail });
+    if (!user!.admin) {
+        res.status(402);
+        return;
+    }
+
     const roomObjectId = Types.ObjectId(roomId);
     const section = new Section({
         name,
@@ -15,6 +23,7 @@ const createSectionRoute = async (req: Request, res: Response): Promise<void> =>
 
     // Retrieve the room with the room id and push the section id into the list of section ids
     const room = await Room.findOne({ _id: roomObjectId });
+
     if (room) {
         room.sections.push(section.id);
     } else {

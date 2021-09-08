@@ -81,11 +81,10 @@ async function searchTimeblocks(selectedDate: string, sectionInformation: Sectio
         return [];
     }
 
-    const bookedTimeBlocks = await timeBlockModel
-        .find({
-            sectionId: sectionInformation._id,
-            startsAt: { $gte: startDate.toJSDate(), $lte: startDate.plus({ days: 1 }).toJSDate() },
-        })
+    const bookedTimeBlocks = await timeBlockModel.find({
+        sectionId: sectionInformation._id,
+        startsAt: { $gte: startDate.toJSDate(), $lte: startDate.plus({ days: 1 }).toJSDate() },
+    });
 
     const timeBlocks: TimeblockInformation[] = [];
 

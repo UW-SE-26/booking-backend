@@ -20,6 +20,7 @@ const registerRoute = async (req: Request, res: Response): Promise<void> => {
 
     const emailCode = crypto.randomBytes(64).toString('hex');
     const newUser = new User({
+        admin: false, //if you want admin set yourself manually :)
         name: req.body.name,
         email: req.body.email,
         websiteUser: true,
@@ -27,6 +28,7 @@ const registerRoute = async (req: Request, res: Response): Promise<void> => {
         registeredAt: new Date(),
         verified: false,
         emailCode: emailCode,
+        program: req.body.program,
     });
 
     await newUser.save();

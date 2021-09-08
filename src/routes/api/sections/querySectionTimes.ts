@@ -30,12 +30,11 @@ const querySectionTimesRoute = async (req: Request, res: Response): Promise<void
         res.status(403).json({ err: 'Room is closed' });
         return;
     }
-    const bookedTimeBlocks = await timeBlockModel
-        .find({
-            sectionId: sectionInformation._id,
-            startsAt: { $gte: startDate.toJSDate(), $lte: startDate.plus({ days: 1 }).toJSDate() },
-        });
-    
+    const bookedTimeBlocks = await timeBlockModel.find({
+        sectionId: sectionInformation._id,
+        startsAt: { $gte: startDate.toJSDate(), $lte: startDate.plus({ days: 1 }).toJSDate() },
+    });
+
     const timeBlocks = [];
 
     let start = 0,
