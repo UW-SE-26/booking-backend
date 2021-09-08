@@ -48,7 +48,7 @@ if (process.env.ENABLE_DISCORD_BOT === 'true' && process.env.DISCORD_TOKEN !== u
 }
 
 // Scheduling an autodelete task that runs every day at 00:00
-const job = schedule.scheduleJob('*0 0 * * *', async function () {
+schedule.scheduleJob('*0 0 * * *', async function () {
     const currDate = new Date();
     currDate.setDate(currDate.getDate() - 7);
     await TimeBlock.deleteMany({ startsAt: { $lt: currDate } });
