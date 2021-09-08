@@ -1,6 +1,7 @@
 import { Schema, model } from 'mongoose';
 
 interface User {
+    admin: boolean;
     name: string;
     email: string;
     websiteUser: boolean;
@@ -10,9 +11,11 @@ interface User {
     emailCode: string;
     resetCode: string;
     resetAt: number;
+    program: string;
 }
 
 const userSchema = new Schema<User>({
+    admin: { type: Boolean, required: true, default: false },
     email: { type: String, required: true },
     websiteUser: { type: Boolean, required: true },
     /*
@@ -30,6 +33,11 @@ const userSchema = new Schema<User>({
      */
     resetCode: String,
     resetAt: Number,
+    program: {
+        type: String,
+        enum: ['SE', 'ECE'],
+        default: 'SE',
+    },
 });
 
 const userModel = model<User>('User', userSchema);

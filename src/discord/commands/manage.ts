@@ -1,14 +1,24 @@
+<<<<<<< HEAD
 import { ButtonInteraction, CommandInteraction, MessageEmbed, MessageActionRow, MessageButton, Message, SelectMenuInteraction } from 'discord.js';
 import { Types } from 'mongoose';
 import TimeblockModel from '../../models/timeBlock.model';
 import BookingModel from '../../models/booking.model';
+=======
+import { ButtonInteraction, CommandInteraction, Message, MessageActionRow, MessageButton, MessageEmbed, SelectMenuInteraction } from 'discord.js';
+import { Types } from 'mongoose';
+import TimeblockModel from '../../models/timeBlock.model';
+>>>>>>> d6cc29eeb4c7195c61d313ede6f348c971962452
 import SectionModel from '../../models/section.model';
 
 function updateEmbed(userArray: string[], maxCapacity: number, manageState: string) {
     const embedTitle = manageState === 'add' ? 'Adding' : 'Removing';
     const preposition = manageState === 'add' ? 'to' : 'from';
 
+<<<<<<< HEAD
     const embed = new MessageEmbed()
+=======
+    return new MessageEmbed()
+>>>>>>> d6cc29eeb4c7195c61d313ede6f348c971962452
         .setColor('#48d7fb')
         .setTitle(`Currently ${embedTitle} Collaborators`)
         .setDescription(
@@ -16,8 +26,11 @@ function updateEmbed(userArray: string[], maxCapacity: number, manageState: stri
                 maxCapacity - userArray.length
             } available spaces left):\n${userArray.map((user) => `<@!${user}>`).join('\n')}`
         );
+<<<<<<< HEAD
 
     return embed;
+=======
+>>>>>>> d6cc29eeb4c7195c61d313ede6f348c971962452
 }
 
 function updateButtons(manageState: string) {
@@ -30,10 +43,17 @@ function updateButtons(manageState: string) {
     return new MessageActionRow().addComponents(buttonRow);
 }
 
+<<<<<<< HEAD
 async function mongoDBFilter(userArray: string[], bookingId: string) {
     //Ensures no duplicate members are listed under users of a certain booking
     const filterArray = [];
     const currentUserArray = (await BookingModel.findOne({ _id: Types.ObjectId(bookingId) }))!.users;
+=======
+async function mongoDBFilter(userArray: string[], timeblockId: string) {
+    //Ensures no duplicate members are listed under users of a certain booking
+    const filterArray = [];
+    const currentUserArray = (await TimeblockModel.findOne({ _id: Types.ObjectId(timeblockId) }))!.users;
+>>>>>>> d6cc29eeb4c7195c61d313ede6f348c971962452
 
     for (const user of userArray) {
         if (!currentUserArray.includes(user)) {
@@ -44,22 +64,35 @@ async function mongoDBFilter(userArray: string[], bookingId: string) {
 }
 
 async function handleCommandInteraction(interaction: CommandInteraction) {
+<<<<<<< HEAD
     const bookingId = interaction.options.getString('booking-id', true);
     //Regex filters out invalid booking ID formats
     const hexRegex = /[0-9A-Fa-f]{6}/g;
 
     if (!hexRegex.test(bookingId)) {
+=======
+    const timeblockId = interaction.options.getString('booking-id', true);
+    //Regex filters out invalid booking ID formats
+    const hexRegex = /[0-9A-Fa-f]{6}/g;
+
+    if (!hexRegex.test(timeblockId)) {
+>>>>>>> d6cc29eeb4c7195c61d313ede6f348c971962452
         interaction.reply({ content: 'Invalid Booking ID Format: Do `/view` to see all your current bookings!', ephemeral: true });
         return;
     }
 
+<<<<<<< HEAD
     const bookedBooking = await BookingModel.findOne({ _id: Types.ObjectId(bookingId) });
+=======
+    const bookedBooking = await TimeblockModel.findOne({ _id: Types.ObjectId(timeblockId) });
+>>>>>>> d6cc29eeb4c7195c61d313ede6f348c971962452
 
     if (!bookedBooking) {
         interaction.reply({ content: 'Invalid Booking ID: Do `/view` to see all your current bookings!', ephemeral: true });
         return;
     }
 
+<<<<<<< HEAD
     const bookedTimeblock = await TimeblockModel.findOne({ _id: bookedBooking.timeBlock });
 
     if (!bookedTimeblock) {
@@ -68,6 +101,9 @@ async function handleCommandInteraction(interaction: CommandInteraction) {
     }
 
     const bookedSection = await SectionModel.findOne({ _id: bookedTimeblock.sectionId });
+=======
+    const bookedSection = await SectionModel.findOne({ _id: bookedBooking.sectionId });
+>>>>>>> d6cc29eeb4c7195c61d313ede6f348c971962452
 
     if (!bookedSection) {
         interaction.reply({ content: 'Section not found! Please contact an admin.', ephemeral: true });
@@ -197,7 +233,11 @@ export default {
             if (buttonInteraction.user.id === interaction.user.id) {
                 switch (buttonInteraction.customId) {
                     case 'completeBooking':
+<<<<<<< HEAD
                         await BookingModel.updateOne({ _id: bookingId }, { $push: { users: await mongoDBFilter(userArray, bookingId) } }, { upsert: true });
+=======
+                        await TimeblockModel.updateOne({ _id: bookingId }, { $push: { users: await mongoDBFilter(userArray, bookingId) } }, { upsert: true });
+>>>>>>> d6cc29eeb4c7195c61d313ede6f348c971962452
 
                         interaction.followUp({ content: 'Booking Successfully Booked!', ephemeral: true });
                         interaction.deleteReply();
