@@ -10,6 +10,7 @@ interface User {
     emailCode: string;
     resetCode: string;
     resetAt: number;
+    program: string;
 }
 
 const userSchema = new Schema<User>({
@@ -30,6 +31,11 @@ const userSchema = new Schema<User>({
      */
     resetCode: String,
     resetAt: Number,
+    program: {
+        type: String,
+        enum: ['SE', 'ECE'],
+        default: 'SE'
+    }
 });
 
 const userModel = model<User>('User', userSchema);
