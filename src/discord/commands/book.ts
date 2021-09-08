@@ -86,7 +86,7 @@ async function searchTimeblocks(selectedDate: string, sectionInformation: Sectio
             sectionId: sectionInformation._id,
             startsAt: { $gte: startDate.toJSDate(), $lte: startDate.plus({ days: 1 }).toJSDate() },
         })
-        .populate('bookings');
+
     const timeBlocks: TimeblockInformation[] = [];
 
     let start = 0,

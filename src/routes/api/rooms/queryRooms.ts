@@ -1,10 +1,6 @@
 import { Request, Response } from 'express';
 import Room from '../../../models/room.model';
 
-/**
- * Route to query all sections or individual section
- * @author Kevin Wang
- */
 const queryRoomsRoute = async (req: Request, res: Response): Promise<void> => {
     const id = req.query.id;
     if (id) {
