@@ -4,7 +4,7 @@ import userModel from '../../../models/user.model';
 
 const createRoomRoute = async (req: Request, res: Response): Promise<void> => {
     // Get data from request and validate data
-    const { name, schedule, closed } = req.body;
+    const { name, schedule, closed, images } = req.body;
 
     const user = await userModel.findOne({ email: req.userEmail });
     if (!user!.admin) {
@@ -31,6 +31,7 @@ const createRoomRoute = async (req: Request, res: Response): Promise<void> => {
         name,
         schedule,
         closed,
+        images,
     });
     await room.save();
     res.status(201).json({ room });

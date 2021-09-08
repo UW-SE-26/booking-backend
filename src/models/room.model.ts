@@ -8,6 +8,7 @@ export interface Room {
     issues: [Types.ObjectId];
     schedule: [Schedule];
     program: string;
+    images: [string];
 }
 
 const roomSchema = new Schema<Room>({
@@ -30,6 +31,7 @@ const roomSchema = new Schema<Room>({
         enum: ['SE', 'ECE'],
         default: 'SE',
     },
+    images: [String],
 });
 
 const room = model<Room>('Room', roomSchema);
