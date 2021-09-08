@@ -7,6 +7,7 @@ export interface Room {
     sections: [Types.ObjectId];
     issues: [Types.ObjectId];
     schedule: [Schedule];
+    program: string;
 }
 
 const roomSchema = new Schema<Room>({
@@ -24,6 +25,11 @@ const roomSchema = new Schema<Room>({
             end: Number,
         },
     ],
+    program: {
+        type: String,
+        enum: ['SE', 'ECE'],
+        default: 'SE',
+    },
 });
 
 const room = model<Room>('Room', roomSchema);
