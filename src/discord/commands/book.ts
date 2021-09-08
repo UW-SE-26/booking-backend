@@ -1,9 +1,10 @@
-import { CommandInteraction, MessageEmbed, MessageActionRow, MessageSelectMenu, MessageButton, ButtonInteraction, SelectMenuInteraction, Message } from 'discord.js';
+import { CommandInteraction, MessageEmbed, MessageActionRow, MessageSelectMenu, MessageButton, SelectMenuInteraction, Message } from 'discord.js';
 import roomModel, { Room } from '../../models/room.model';
 import sectionModel, { Section } from '../../models/section.model';
 import { DateTime } from 'luxon';
 import { Types } from 'mongoose';
 import timeBlockModel from '../../models/timeBlock.model';
+import manageCommand from './manage';
 
 interface TimeblockInformation {
     booked: boolean;
@@ -48,14 +49,14 @@ function getDateOptions(selectedDate?: string) {
 async function parseCommandOptions(interaction: CommandInteraction): Promise<string[] | undefined> {
     //Parses the book command option parameters to return the corresponding Room's section ID
     const roomName = interaction.options.getString('room-name');
-    const roomJson = await RoomModel.findOne({ name: roomName !== null ? roomName : undefined });
+    const roomJson = await roomModel.findOne({ name: roomName !== null ? roomName : undefined });
 
     if (!roomJson) {
         interaction.reply({ content: 'Invalid Room: Do `/rooms` to see all avaliable rooms!', ephemeral: true });
         return undefined;
     }
 
-    const sectionJson = await SectionModel.find({ roomId: roomJson._id });
+    const sectionJson = await sectionModel.find({ roomId: roomJson._id });
     const specificSection = sectionJson.find((s) => s.name === interaction.options.getString('section-name'));
 
     if (!specificSection) {
@@ -164,8 +165,8 @@ export default {
 
         if (_roomId === undefined || _sectionId === undefined) return;
 
-        const roomInformation = await RoomModel.findOne({ _id: _roomId });
-        const sectionInformation = await SectionModel.findOne({ _id: _sectionId });
+        const roomInformation = await roomModel.findOne({ _id: _roomId });
+        const sectionInformation = await sectionModel.findOne({ _id: _sectionId });
 
         const embed = new MessageEmbed()
             .setColor('#48d7fb')
@@ -200,55 +201,27 @@ export default {
 
                         const selectedDate = DateTime.fromFormat(menuSelectedDate, 'yyyy-MM-dd', { zone: 'America/Toronto' });
                         const _startsAt = selectedDate.set({ hour: parseInt(selectedTimeblock[0]) }).toJSDate();
-                        const _endsAt = selectedDate.set({ hour: parseInt(selectedTimeblock[1]) }).toJSDate();
                         const maxCapacity = parseInt(selectedTimeblock[2]);
 
-                        const foundTimeblock = await TimeblockModel.findOne({ sectionId: Types.ObjectId(_sectionId), startsAt: _startsAt, endsAt: _endsAt });
+                        const foundTimeblock = await timeBlockModel.findOne({ sectionId: Types.ObjectId(_sectionId), startsAt: _startsAt });
                         let bookingId;
 
-                        if (foundTimeblock) {
-                            const potentialTimeblock = await BookingModel.findOne({ timeBlock: foundTimeblock!._id, booker: interaction.user.id });
+                        const hour = selectedDate.hour;
+                        const schedule = roomInformation!.schedule[selectedDate.weekday];
+                        const validBooking = hour < schedule.start || hour > schedule.end;
 
-                            //Tests to see if the booking is a repeat booking (same time and same booker)
-                            if (!potentialTimeblock) {
-                                const newBooking = await BookingModel.create({
-                                    users: [interaction.user.id],
-                                    timeBlock: foundTimeblock._id,
-                                    booker: interaction.user.id,
-                                });
-
-                                bookingId = newBooking._id;
-
-                                await TimeblockModel.updateOne({ _id: foundTimeblock._id }, { $push: { bookings: newBooking._id } });
-                            } else {
-                                menuInteraction.reply({
-                                    content: 'You already have a booking at this time! Use `/view` to view your bookings or use `/manage` to manage your bookings!',
-                                    ephemeral: true,
-                                });
-                                interaction.deleteReply();
-                                return;
-                            }
-                        } else {
-                            const newTimeBlock = new TimeblockModel({
-                                bookings: [],
-                                sectionId: sectionInformation!._id,
-                                startsAt: _startsAt,
-                                endsAt: _endsAt,
-                            });
-                            // Create new booking and add to database
-                            const firstBooking = await BookingModel.create({
+                        if (!foundTimeblock && validBooking) {
+                            const timeBlock = await timeBlockModel.create({
                                 users: [interaction.user.id],
-                                timeBlock: newTimeBlock._id,
                                 booker: interaction.user.id,
+                                sectionId: Types.ObjectId(_sectionId),
+                                startsAt: _startsAt,
                             });
-
-                            // Add the new booking to the bookings array of the new time block
-                            newTimeBlock.bookings.push(firstBooking._id);
-                            bookingId = firstBooking._id;
-                            // Add the new time block to the database
-                            await newTimeBlock.save();
+                            bookingId = timeBlock._id;
+                        } else {
+                            await menuInteraction.reply({ content: 'This time block is already booked!', ephemeral: true });
+                            break;
                         }
-
                         manageCommand.handleSelectMenu(menuInteraction, [interaction.user.id], maxCapacity, bookingId);
 
                         await interaction.deleteReply();
