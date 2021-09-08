@@ -59,13 +59,7 @@ const querySectionTimesRoute = async (req: Request, res: Response): Promise<void
         start++;
     }
 
-    const section = {
-        id: sectionInformation._id,
-        name: sectionInformation.name,
-        capacity: sectionInformation.capacity,
-        availableTimes: timeBlocks,
-    };
-    res.status(200).json(section);
+    res.status(200).json(timeBlocks);
 };
 
 export default querySectionTimesRoute;
