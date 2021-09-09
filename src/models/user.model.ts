@@ -9,6 +9,7 @@ interface User {
     registeredAt: Date;
     verified: boolean;
     emailCode: string;
+    refresh: string;
     resetCode: string;
     resetAt: number;
     program: string;
@@ -28,16 +29,17 @@ const userSchema = new Schema<User>({
     registeredAt: Date,
     verified: Boolean,
     emailCode: String,
-    /*
-    These fields are used for password resets and are not guaranteed to be present
-     */
-    resetCode: String,
-    resetAt: Number,
     program: {
         type: String,
         enum: ['SE', 'ECE'],
         default: 'SE',
     },
+    refresh: String,
+    /*
+    These fields are used for password resets and are not guaranteed to be present
+     */
+    resetCode: String,
+    resetAt: Number,
 });
 
 const userModel = model<User>('User', userSchema);

@@ -6,7 +6,7 @@ const adminRoute = async (req: Request, res: Response): Promise<void> => {
     if (user!.admin) {
         res.status(200).json({ success: true });
     } else {
-        res.status(402).json({ success: false });
+        res.status(403).json({ success: false });
     }
 };
 

@@ -35,7 +35,25 @@ const loginRoute = async (req: Request, res: Response): Promise<void> => {
         .setIssuer('SE Spaces Booking')
         .setAudience('SE Spaces Booking Auth')
         .setSubject(user.email)
+        .setExpirationTime('5m')
         .sign(privateKey);
+
+    const refresh = await new SignJWT({})
+        .setProtectedHeader({
+            alg: 'EdDSA',
+        })
+        .setIssuedAt()
+        .setIssuer('SE Spaces Booking')
+        .setAudience('SE Spaces Booking Auth')
+        .setSubject(user.email)
+        .setExpirationTime('1w')
+        .sign(privateKey);
+
+    user.refresh = refresh;
+    await user.save();
+
+    res.cookie('refresh', refresh, { httpOnly: true, sameSite: true /*secure: true*/ });
+
     res.json({
         success: true,
         token: jwt,

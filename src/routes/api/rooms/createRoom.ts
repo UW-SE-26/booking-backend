@@ -8,7 +8,7 @@ const createRoomRoute = async (req: Request, res: Response): Promise<void> => {
 
     const user = await userModel.findOne({ email: req.userEmail });
     if (!user!.admin) {
-        res.status(402);
+        res.status(403);
         return;
     }
 
