@@ -27,7 +27,7 @@ const loginRoute = async (req: Request, res: Response): Promise<void> => {
         return;
     }
 
-    const expire = new Date().getTime() + 300000;
+    const expire = (new Date().getTime() + 300000) / 1000; //5 minutes from now
 
     const jwt = await new SignJWT({})
         .setProtectedHeader({
