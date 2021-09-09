@@ -4,6 +4,7 @@ interface User {
     admin: boolean;
     name: string;
     email: string;
+    discordId: string;
     websiteUser: boolean;
     password: string;
     registeredAt: Date;
@@ -18,6 +19,7 @@ interface User {
 const userSchema = new Schema<User>({
     admin: { type: Boolean, required: true, default: false },
     email: { type: String, required: true },
+    discordId: String,
     websiteUser: { type: Boolean, required: true },
     /*
     Whether the account is a website (true) or discord user (false).
