@@ -1,75 +1,60 @@
 import { Router, Response, Request } from 'express';
 import authMiddleware from '../../middleware/jwtVerify';
-import roomModel from '../../models/room.model';
-import sectionModel from '../../models/section.model';
-import issueModel from '../../models/issue.model';
-import userModel from '../../models/user.model';
+import RoomModel from '../../models/room.model';
+import SectionModel from '../../models/section.model';
+import IssueModel from '../../models/issue.model';
+import TimeBlockModel from '../../models/timeBlock.model';
+import sendEmail from '../../util/email';
 
 const createIssueRoute = Router();
 
-const issueRoute = async (request: Request, response: Response): Promise<void> => {
-    const { timestamp, message, roomId, sectionId } = request.body;
-    const room = await roomModel.findById(roomId); //parsing for room id
-    const section = await sectionModel.find({ sections: sectionId }); //parsing for room id
-    const ts = Date.parse(timestamp); //parsing timestamp to store and convert / check if proper date type
-    const user = await userModel.findOne({ email: request.userEmail });
+const issueRoute = async (req: Request, res: Response): Promise<void> => {
+    const { message, bookingId } = req.body;
 
-    //if the room is valid
-    if (section === null) {
-        //if the room's section isn't valid / isn't found in database
-        response.status(422).json({ error: "That section doesn't exist, or was inputted incorrectly." });
+    const timeBlock = await TimeBlockModel.findOne({ _id: bookingId });
+    if (!timeBlock) {
+        res.status(400);
         return;
     }
-    //if the section is valid
-    if (typeof message !== 'string') {
-        //checks to ensure that the message is a string type to prevent attacks
-        response.status(422).json({ error: "That message isn't the proper format!" });
+    const section = await SectionModel.findOne({ _id: timeBlock.sectionId });
+    if (!section) {
+        res.status(400);
         return;
     }
-    //if the input type for message is string
-    if (ts === null) {
-        response.status(422).json({ error: "That timestamp isn't the proper format!" });
-        return;
-    }
-    if (user === null) {
-        response.status(422).json({ error: 'User not found!' });
+    const room = await RoomModel.findOne({ _id: section.roomId });
+    if (!room) {
+        res.status(400);
         return;
     }
 
-    const issue = new issueModel({
-        timestamp: ts,
+    const issue = await IssueModel.create({
+        reportingUserEmail: req.userEmail,
         message: message,
-        status: 'Unresolved',
-        roomId: roomId,
-        sectionId: sectionId,
-        reportingUserId: user.id,
-    });
-    if (room === null) {
-        //if the room isn't valid / isn't found in database
-        response.status(422).json({ error: "That room doesn't exist, or was inputted incorrectly." });
-        return;
-    } else {
-        //if room exists, push the issue id as foreign key for future population in querying
-        room.issues.push(issue.id);
-    }
-
-    //save room and issues
-    let err = false;
-    await room.save().catch((error) => {
-        response.status(400).json({ error });
-        return;
-    });
-    await issue.save().catch((e) => {
-        console.log(e);
-        response.status(400).json({ error: "The issue couldn't be created!" });
-        err = true;
+        status: 'unresolved',
+        bookingId: bookingId,
     });
 
-    if (err) {
+    room.issues.push(issue._id);
+    await room.save();
+
+    const blamedTimeBlock = await TimeBlockModel.findOne({ sectionId: timeBlock.sectionId, startsAt: { $lte: timeBlock.startsAt } }).sort({ startsAt: -1 });
+
+    if (!blamedTimeBlock) {
+        res.status(400);
         return;
     }
 
-    response.status(201).json({ issue });
+    const blamedUsers = blamedTimeBlock.users;
+
+    for (const blamedUser of blamedUsers) {
+        await sendEmail({
+            to: blamedUser,
+            subject: 'Issue Reported',
+            text: `An issue was reported for your booking`,
+        }).catch(() => console.log('issue email to ${blamedUser} failed'));
+    }
+
+    res.status(201).json({ issue });
 };
 
 createIssueRoute.post('/create', authMiddleware, issueRoute);
