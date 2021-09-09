@@ -19,14 +19,15 @@ const loginRoute = async (req: Request, res: Response): Promise<void> => {
         });
         return;
     }
-    // Temporarily disabled verification check
-    // Will be added after email verification is set up
-    /* if (!user.verified) {
+
+    if (!user.verified) {
         res.status(403).json({
             error: 'Account not verified',
         });
         return;
-    } */
+    }
+
+    const expire = (new Date().getTime() + 300000) / 1000; //5 minutes from now
 
     const jwt = await new SignJWT({})
         .setProtectedHeader({
@@ -36,10 +37,29 @@ const loginRoute = async (req: Request, res: Response): Promise<void> => {
         .setIssuer('SE Spaces Booking')
         .setAudience('SE Spaces Booking Auth')
         .setSubject(user.email)
+        .setExpirationTime(expire)
         .sign(privateKey);
+
+    const refresh = await new SignJWT({})
+        .setProtectedHeader({
+            alg: 'EdDSA',
+        })
+        .setIssuedAt()
+        .setIssuer('SE Spaces Booking')
+        .setAudience('SE Spaces Booking Auth')
+        .setSubject(user.email)
+        .setExpirationTime('1w')
+        .sign(privateKey);
+
+    user.refresh = refresh;
+    await user.save();
+
+    res.cookie('refresh', refresh, { httpOnly: true, sameSite: true /*secure: true*/ });
+
     res.json({
         success: true,
         token: jwt,
+        expiration: expire,
     });
 };
 

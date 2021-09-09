@@ -13,7 +13,7 @@ export async function resetPasswordRoute(req: Request, res: Response): Promise<v
         return;
     }
 
-    const emailCode = crypto.randomBytes(64).toString('hex');
+    const emailCode = crypto.randomBytes(8).toString('hex');
     user.resetCode = emailCode;
     user.resetAt = Date.now();
 

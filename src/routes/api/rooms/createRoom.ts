@@ -4,11 +4,11 @@ import userModel from '../../../models/user.model';
 
 const createRoomRoute = async (req: Request, res: Response): Promise<void> => {
     // Get data from request and validate data
-    const { name, schedule, closed, images } = req.body;
+    const { name, schedule, closed, program, images } = req.body;
 
     const user = await userModel.findOne({ email: req.userEmail });
     if (!user!.admin) {
-        res.status(402);
+        res.status(403);
         return;
     }
 
@@ -31,6 +31,7 @@ const createRoomRoute = async (req: Request, res: Response): Promise<void> => {
         name,
         schedule,
         closed,
+        program,
         images,
     });
     await room.save();
