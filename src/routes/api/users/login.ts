@@ -54,7 +54,7 @@ const loginRoute = async (req: Request, res: Response): Promise<void> => {
     user.refresh = refresh;
     await user.save();
 
-    res.cookie('refresh', refresh, { httpOnly: true, sameSite: true /*secure: true*/ });
+    res.cookie('refresh', refresh, { httpOnly: true /*sameSite: true, secure: true*/ });
 
     res.json({
         success: true,
