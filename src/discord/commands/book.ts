@@ -1,16 +1,15 @@
 import { CommandInteraction, MessageEmbed, MessageActionRow, MessageSelectMenu, MessageButton, SelectMenuInteraction, Message } from 'discord.js';
-import roomModel, { Room } from '../../models/room.model';
-import sectionModel, { Section } from '../../models/section.model';
+import RoomModel, { Room } from '../../models/room.model';
+import SectionModel, { Section } from '../../models/section.model';
+import TimeBlockModel from '../../models/timeBlock.model';
 import { DateTime } from 'luxon';
 import { Types } from 'mongoose';
-import timeBlockModel from '../../models/timeBlock.model';
 import manageCommand from './manage';
 
 interface TimeblockInformation {
-    booked: boolean;
-    startsAt: number;
-    endsAt: number;
-    date: Date;
+    startsAt: DateTime;
+    endsAt: DateTime;
+    availableCapacity: number;
 }
 
 interface SectionInformation extends Section {
@@ -49,14 +48,14 @@ function getDateOptions(selectedDate?: string) {
 async function parseCommandOptions(interaction: CommandInteraction): Promise<string[] | undefined> {
     //Parses the book command option parameters to return the corresponding Room's section ID
     const roomName = interaction.options.getString('room-name');
-    const roomJson = await roomModel.findOne({ name: roomName !== null ? roomName : undefined });
+    const roomJson = await RoomModel.findOne({ name: roomName !== null ? roomName : undefined });
 
     if (!roomJson) {
         interaction.reply({ content: 'Invalid Room: Do `/rooms` to see all avaliable rooms!', ephemeral: true });
         return undefined;
     }
 
-    const sectionJson = await sectionModel.find({ roomId: roomJson._id });
+    const sectionJson = await SectionModel.find({ roomId: roomJson._id });
     const specificSection = sectionJson.find((s) => s.name === interaction.options.getString('section-name'));
 
     if (!specificSection) {
@@ -70,53 +69,51 @@ async function parseCommandOptions(interaction: CommandInteraction): Promise<str
 async function searchTimeblocks(selectedDate: string, sectionInformation: SectionInformation, roomInformation: Room): Promise<TimeblockInformation[]> {
     //Function finds all available timeblocks for a given date
 
-    const startDate = DateTime.fromISO(String(selectedDate));
+    const currentDate = DateTime.now().setZone('America/Toronto');
+    const nextHour = currentDate.toISODate() === selectedDate ? currentDate.hour + 1 : 0;
 
-    // Validates start and end dates
-    // Retrieves room that the section corresponds to
-    if (!roomInformation) {
-        return [];
-    }
-    if (roomInformation.closed) {
-        return [];
-    }
+    const startDate = DateTime.fromISO(selectedDate, { zone: 'America/Toronto' }).set({ hour: nextHour });
+    const endDate = DateTime.fromISO(selectedDate, { zone: 'America/Toronto' }).set({ hour: 23 });
 
-    const bookedTimeBlocks = await timeBlockModel.find({
+    const bookedTimeblocks = await TimeBlockModel.find({
         sectionId: sectionInformation._id,
-        startsAt: { $gte: startDate.toJSDate(), $lte: startDate.plus({ days: 1 }).toJSDate() },
+        startsAt: { $gte: startDate.toJSDate() },
     });
 
-    const timeBlocks: TimeblockInformation[] = [];
+    const timeBlocks = [];
+    let currHourStart = startDate;
+    let currHourEnd = currHourStart.plus({ hours: 1 });
 
-    let start = 0,
-        end = 23; //make compiler shut up about being uninitialized
+    // Iterate through the hours in the given time range
+    while (currHourStart < endDate) {
+        // Finds schedule start and end for the day that the current hour falls on and assigns the appropriate hours for scheduleDayStart and scheduleDayEnd
+        const { start: scheduleDayStart, end: scheduleDayEnd } = roomInformation.schedule.find((day) => day.dayOfWeek + 1 === currHourStart.weekday) ?? { start: 0, end: 0 };
 
-    for (const day of roomInformation.schedule) {
-        if (day.dayOfWeek === startDate.weekday) {
-            start = day.start;
-            end = day.end;
-            break;
+        // Checks if the hour falls under an open time for the room and if it does adds hour to the list of available times
+        if (!roomInformation.closed && currHourStart.weekday === currHourEnd.weekday && currHourStart.hour >= scheduleDayStart && currHourEnd.hour <= scheduleDayEnd) {
+            // Check for time block in database
+            const bookedTimeBlockFound = bookedTimeblocks.find((bookedTimeBlock) => bookedTimeBlock.startsAt.getTime() === currHourStart.toMillis());
+
+            if (!bookedTimeBlockFound) {
+                const newTimeBlock = {
+                    startsAt: currHourStart,
+                    endsAt: currHourEnd,
+                    availableCapacity: sectionInformation.capacity,
+                };
+                timeBlocks.push(newTimeBlock);
+            }
         }
-    }
 
-    while (start < end) {
-        const bookedTimeBlock = bookedTimeBlocks.find((timeBlock) => timeBlock.startsAt.getHours() === start);
-        const timeBlock = {
-            booked: bookedTimeBlock != null,
-            date: startDate.toJSDate(),
-            startsAt: start,
-            endsAt: start + 1,
-        };
-        timeBlocks.push(timeBlock);
-        start++;
+        // Increments hour start and end for next iteration
+        currHourStart = currHourStart.plus({ hours: 1 });
+        currHourEnd = currHourEnd.plus({ hours: 1 });
     }
-
     return timeBlocks;
 }
 
-function timeConversion(time: number, date: Date) {
+function timeConversion(timeObject: DateTime) {
     //Converts 24 hour time to 12 hour time with a.m. and p.m. and changes 0:00 to 12:00
-    return date.toISOString() + (time > 12 ? `${time - 12}:00 PM` : `${time}:00 AM`);
+    return timeObject.setZone('America/Toronto').toFormat('h:mm a');
 }
 
 function parseTimeblocks(timeBlocks: TimeblockInformation[]) {
@@ -124,8 +121,9 @@ function parseTimeblocks(timeBlocks: TimeblockInformation[]) {
     const timeBlockOptions = [];
     for (const timeBlock of timeBlocks) {
         timeBlockOptions.push({
-            label: `${timeConversion(timeBlock.startsAt, timeBlock.date)} - ${timeConversion(timeBlock.endsAt, timeBlock.date)}`,
-            value: `${timeConversion(timeBlock.startsAt, timeBlock.date)} - ${timeConversion(timeBlock.endsAt, timeBlock.date)}`,
+            label: `${timeConversion(timeBlock.startsAt)} - ${timeConversion(timeBlock.endsAt)}`,
+            description: `Section Capacity: ${timeBlock.availableCapacity}`,
+            value: `‎${timeBlock.startsAt.hour},‎${timeBlock.endsAt.hour},${timeBlock.availableCapacity}`,
         });
     }
 
@@ -164,8 +162,8 @@ export default {
 
         if (_roomId === undefined || _sectionId === undefined) return;
 
-        const roomInformation = await roomModel.findOne({ _id: Types.ObjectId(_roomId) });
-        const sectionInformation = await sectionModel.findOne({ _id: Types.ObjectId(_sectionId) });
+        const roomInformation = await RoomModel.findOne({ _id: Types.ObjectId(_roomId) });
+        const sectionInformation = await SectionModel.findOne({ _id: Types.ObjectId(_sectionId) });
 
         const embed = new MessageEmbed()
             .setColor('#48d7fb')
@@ -202,26 +200,16 @@ export default {
                         const _startsAt = selectedDate.set({ hour: parseInt(selectedTimeblock[0]) }).toJSDate();
                         const maxCapacity = parseInt(selectedTimeblock[2]);
 
-                        const foundTimeblock = await timeBlockModel.findOne({ sectionId: Types.ObjectId(_sectionId), startsAt: _startsAt });
-                        let bookingId;
+                        console.log(selectedTimeblock[2]);
 
-                        const hour = selectedDate.hour;
-                        const schedule = roomInformation!.schedule[selectedDate.weekday];
-                        const validBooking = hour < schedule.start || hour > schedule.end;
+                        const timeBlock = await TimeBlockModel.create({
+                            users: [interaction.user.id],
+                            booker: interaction.user.id,
+                            sectionId: Types.ObjectId(_sectionId),
+                            startsAt: _startsAt,
+                        });
 
-                        if (!foundTimeblock && validBooking) {
-                            const timeBlock = await timeBlockModel.create({
-                                users: [interaction.user.id],
-                                booker: interaction.user.id,
-                                sectionId: Types.ObjectId(_sectionId),
-                                startsAt: _startsAt,
-                            });
-                            bookingId = timeBlock._id;
-                        } else {
-                            await menuInteraction.reply({ content: 'This time block is already booked!', ephemeral: true });
-                            break;
-                        }
-                        manageCommand.handleSelectMenu(menuInteraction, [interaction.user.id], maxCapacity, bookingId);
+                        manageCommand.handleSelectMenu(menuInteraction, [interaction.user.id], maxCapacity, timeBlock._id);
 
                         await interaction.deleteReply();
                         break;

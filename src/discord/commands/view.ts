@@ -72,7 +72,7 @@ async function getUserBookings(userId: string) {
             label: `${label}: ${bookingInformation.roomName} - ${bookingInformation.sectionName}`,
             description: `${bookingInformation.startDate.weekdayLong} - ${bookingInformation.startDate.monthLong} ${bookingInformation.startDate.day}${dateSuffix(
                 bookingInformation.startDate.day
-            )}:${timeConversion(bookingInformation.startDate)} - ${timeConversion(bookingInformation.endDate)}`,
+            )}: ${timeConversion(bookingInformation.startDate)} - ${timeConversion(bookingInformation.endDate)}`,
             value: `${bookingInformation.bookingId}`,
         });
     }
@@ -102,26 +102,30 @@ export default {
         const selectMenuCollector = message.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 120000 });
 
         selectMenuCollector.on('collect', async (selectMenuInteraction: SelectMenuInteraction) => {
-            const bookingInformation = await getBookingInformation(selectMenuInteraction.values[0]);
+            if (selectMenuInteraction.user.id === interaction.user.id) {
+                const bookingInformation = await getBookingInformation(selectMenuInteraction.values[0]);
 
-            if (!bookingInformation) {
-                interaction.reply('Error retrieving booking information. Please contact an admin.');
-                return;
+                if (!bookingInformation) {
+                    interaction.reply('Error retrieving booking information. Please contact an admin.');
+                    return;
+                }
+
+                const authorUsername = message!.guild!.members.cache.get(bookingInformation.booker)?.user.username;
+
+                const informationEmbed = new MessageEmbed()
+                    .setColor('#48d7fb')
+                    .setAuthor(`Booked by: @${authorUsername}`) //Author field does not accept Discord ID to Mention conversion
+                    .setTitle(`${bookingInformation.roomName} - ${bookingInformation.sectionName}`)
+                    .addField('Day of Week:', `${bookingInformation.startDate.weekdayLong}`, true)
+                    .addField('Date:', `${bookingInformation.startDate.monthLong} ${bookingInformation.startDate.day}${dateSuffix(bookingInformation.startDate.day)}`, true)
+                    .addField('Time:', `${timeConversion(bookingInformation.startDate)} - ${timeConversion(bookingInformation.endDate)}`)
+                    .addField('Invited Collaborators:', `${bookingInformation.bookingUsers.map((user) => `<@!${user}>`).join('\n')}`)
+                    .setFooter(`Booking ID: ${bookingInformation.bookingId}`);
+
+                selectMenuInteraction.reply({ embeds: [informationEmbed], ephemeral: true });
+            } else {
+                selectMenuInteraction.reply({ content: "This select menu isn't for you!", ephemeral: true });
             }
-
-            const authorUsername = message!.guild!.members.cache.get(bookingInformation.booker)?.user.username;
-
-            const informationEmbed = new MessageEmbed()
-                .setColor('#48d7fb')
-                .setAuthor(`Booked by: @${authorUsername}`) //Author field does not accept Discord ID to Mention conversion
-                .setTitle(`${bookingInformation.roomName} - ${bookingInformation.sectionName}`)
-                .addField('Day of Week:', `${bookingInformation.startDate.weekdayLong}`, true)
-                .addField('Date:', `${bookingInformation.startDate.monthLong} ${bookingInformation.startDate.day}${dateSuffix(bookingInformation.startDate.day)}`, true)
-                .addField('Time:', `${timeConversion(bookingInformation.startDate)} - ${timeConversion(bookingInformation.endDate)}`)
-                .addField('Invited Collaborators:', `${bookingInformation.bookingUsers.map((user) => `<@!${user}>`).join('\n')}`)
-                .setFooter(`Booking ID: ${bookingInformation.bookingId}`);
-
-            selectMenuInteraction.reply({ embeds: [informationEmbed], ephemeral: true });
         });
     },
 };

@@ -50,14 +50,14 @@ async function handleCommandInteraction(interaction: CommandInteraction) {
         return;
     }
 
-    const bookedBooking = await TimeblockModel.findOne({ _id: Types.ObjectId(timeblockId) });
+    const bookedTimeblock = await TimeblockModel.findOne({ _id: Types.ObjectId(timeblockId) });
 
-    if (!bookedBooking) {
+    if (!bookedTimeblock) {
         interaction.reply({ content: 'Invalid Booking ID: Do `/view` to see all your current bookings!', ephemeral: true });
         return;
     }
 
-    const bookedSection = await SectionModel.findOne({ _id: bookedBooking.sectionId });
+    const bookedSection = await SectionModel.findOne({ _id: bookedTimeblock.sectionId });
 
     if (!bookedSection) {
         interaction.reply({ content: 'Section not found! Please contact an admin.', ephemeral: true });
@@ -79,29 +79,29 @@ async function handleCommandInteraction(interaction: CommandInteraction) {
     }
 
     if (manageState === 'add') {
-        if (bookedBooking.users.length + usernameArray.length > maxCapacity) {
-            interaction.reply({ content: `Too many members listed. Current avaliable space: ${maxCapacity - bookedBooking.users.length}`, ephemeral: true });
+        if (bookedTimeblock.users.length + usernameArray.length > maxCapacity) {
+            interaction.reply({ content: `Too many members listed. Current avaliable space: ${maxCapacity - bookedTimeblock.users.length}`, ephemeral: true });
             return;
         }
 
         for (const id of usernameArray) {
-            if (!bookedBooking.users.includes(id)) {
-                bookedBooking.users.push(id);
+            if (!bookedTimeblock.users.includes(id)) {
+                bookedTimeblock.users.push(id);
             }
         }
-        await bookedBooking.save();
+        await bookedTimeblock.save();
         interaction.reply({ content: 'User(s) successfully added.', ephemeral: true });
     }
 
     if (manageState === 'remove') {
         for (const id of usernameArray) {
-            if (id === bookedBooking.booker) {
+            if (id === bookedTimeblock.booker) {
                 bookError = true;
-            } else if (bookedBooking.users.includes(id)) {
-                bookedBooking.users.splice(bookedBooking.users.indexOf(id), 1);
+            } else if (bookedTimeblock.users.includes(id)) {
+                bookedTimeblock.users.splice(bookedTimeblock.users.indexOf(id), 1);
             }
         }
-        await bookedBooking.save();
+        await bookedTimeblock.save();
 
         if (bookError && usernameArray.length > 1) {
             interaction.reply({ content: 'User(s) successfully removed.\nPS: Cannot remove the booker. Use `/delete` to delete a booking instead.', ephemeral: true });
