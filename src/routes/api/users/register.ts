@@ -18,7 +18,7 @@ const registerRoute = async (req: Request, res: Response): Promise<void> => {
         timeCost: 2, // must be between 2 and 4294967295, value 1 will raise an error
     });
 
-    const emailCode = crypto.randomBytes(64).toString('hex');
+    const emailCode = crypto.randomBytes(8).toString('hex');
     const newUser = new User({
         admin: false, //if you want admin set yourself manually :)
         name: req.body.name,
