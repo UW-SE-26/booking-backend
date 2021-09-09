@@ -37,20 +37,14 @@ const issueRoute = async (req: Request, res: Response): Promise<void> => {
     room.issues.push(issue._id);
     await room.save();
 
-    const possibleTimeBlocks = await TimeBlockModel.find({ sectionId: timeBlock.sectionId, startsAt: { $lte: timeBlock.startsAt } });
-    let maxDate = new Date(0);
-    let blamedUsers;
-    for (const possibleTimeBlock of possibleTimeBlocks) {
-        if (possibleTimeBlock.startsAt > maxDate) {
-            maxDate = possibleTimeBlock.startsAt;
-            blamedUsers = possibleTimeBlock.users;
-        }
-    }
+    const blamedTimeBlock = await TimeBlockModel.findOne({ sectionId: timeBlock.sectionId, startsAt: { $lte: timeBlock.startsAt } }).sort({ startsAt: -1 });
 
-    if (!blamedUsers) {
-        res.status(201).json({ issue });
+    if (!blamedTimeBlock) {
+        res.status(400);
         return;
     }
+
+    const blamedUsers = blamedTimeBlock.users;
 
     for (const blamedUser of blamedUsers) {
         await sendEmail({
