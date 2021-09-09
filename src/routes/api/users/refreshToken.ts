@@ -16,6 +16,8 @@ const refreshTokenRoute = async (req: Request, res: Response): Promise<void> => 
             return;
         }
 
+        const expire = new Date().getTime() + 300000; //5 minutes from now
+
         const jwt = await new SignJWT({})
             .setProtectedHeader({
                 alg: 'EdDSA',
@@ -23,13 +25,14 @@ const refreshTokenRoute = async (req: Request, res: Response): Promise<void> => 
             .setIssuedAt()
             .setIssuer('SE Spaces Booking')
             .setAudience('SE Spaces Booking Auth')
-            .setSubject(req.userEmail)
-            .setExpirationTime('5m')
+            .setSubject(user!.email)
+            .setExpirationTime(expire)
             .sign(privateKey);
 
         res.status(200).json({
             success: true,
             token: jwt,
+            expiration: expire,
         });
     } catch (err) {
         res.status(403).json({ err: 'Refresh token invalid (did it expire?)' });

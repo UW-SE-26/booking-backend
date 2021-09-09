@@ -27,6 +27,8 @@ const loginRoute = async (req: Request, res: Response): Promise<void> => {
         return;
     }
 
+    const expire = new Date().getTime() + 300000;
+
     const jwt = await new SignJWT({})
         .setProtectedHeader({
             alg: 'EdDSA',
@@ -35,7 +37,7 @@ const loginRoute = async (req: Request, res: Response): Promise<void> => {
         .setIssuer('SE Spaces Booking')
         .setAudience('SE Spaces Booking Auth')
         .setSubject(user.email)
-        .setExpirationTime('5m')
+        .setExpirationTime(expire)
         .sign(privateKey);
 
     const refresh = await new SignJWT({})
@@ -57,6 +59,7 @@ const loginRoute = async (req: Request, res: Response): Promise<void> => {
     res.json({
         success: true,
         token: jwt,
+        expiration: expire,
     });
 };
 
