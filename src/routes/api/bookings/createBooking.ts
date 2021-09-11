@@ -39,10 +39,10 @@ const createBookingRoute = async (req: Request, res: Response): Promise<void> =>
     }
 
     const newTimeBlock = await TimeBlock.create({
-        sectionId,
-        userEmails,
-        bookerEmail,
-        date,
+        users: userEmails,
+        booker: bookerEmail,
+        sectionId: Types.ObjectId(sectionId),
+        startsAt: date,
     });
     res.status(200).json({ timeBlock: newTimeBlock });
 };
