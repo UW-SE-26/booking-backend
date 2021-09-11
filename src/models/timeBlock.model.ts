@@ -8,7 +8,7 @@ export interface TimeBlock {
 }
 
 const timeBlockSchema = new Schema<TimeBlock>({
-    users: [{ type: String, required: true }],
+    users: { type: [String], required: true },
     booker: { type: String, required: true },
     sectionId: Types.ObjectId,
     startsAt: Date,
