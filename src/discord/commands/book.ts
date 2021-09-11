@@ -200,8 +200,6 @@ export default {
                         const _startsAt = selectedDate.set({ hour: parseInt(selectedTimeblock[0]) }).toJSDate();
                         const maxCapacity = parseInt(selectedTimeblock[2]);
 
-                        console.log(selectedTimeblock[2]);
-
                         const timeBlock = await TimeBlockModel.create({
                             users: [interaction.user.id],
                             booker: interaction.user.id,
