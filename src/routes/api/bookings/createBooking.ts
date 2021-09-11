@@ -9,7 +9,7 @@ import { Types } from 'mongoose';
 const createBookingRoute = async (req: Request, res: Response): Promise<void> => {
     const { sectionId, userEmails, startsAt } = req.body;
 
-    const date = DateTime.fromISO(startsAt).toJSDate();
+    const date = DateTime.fromISO(startsAt, { zone: 'America/Toronto' }).toJSDate();
 
     const bookerEmail = req.userEmail;
     // Validating for time block nullability
