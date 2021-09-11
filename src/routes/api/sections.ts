@@ -8,6 +8,6 @@ const router = Router();
 
 router.get('/:id', authMiddleware, querySectionRoute);
 router.post('/create', authMiddleware, createSectionRoute);
-router.get('/queryTimes', authMiddleware, querySectionTimesRoute);
+router.post('/queryTimes', authMiddleware, querySectionTimesRoute);
 
 export default router;

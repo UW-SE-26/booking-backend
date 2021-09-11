@@ -6,7 +6,7 @@ import { DateTime } from 'luxon';
 import { Types } from 'mongoose';
 
 const querySectionTimesRoute = async (req: Request, res: Response): Promise<void> => {
-    const { id, date } = req.query;
+    const { id, date } = req.body;
 
     if (!(id && date)) {
         res.status(400).json({ error: 'missing id and date parameters' });
