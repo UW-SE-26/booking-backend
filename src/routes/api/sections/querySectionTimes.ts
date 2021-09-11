@@ -19,7 +19,7 @@ const querySectionTimesRoute = async (req: Request, res: Response): Promise<void
         res.status(404);
         return;
     }
-    const startDate = DateTime.fromISO(String(date));
+    const startDate = DateTime.fromISO(String(date)).setZone('America/Toronto');
 
     // Retrieves room that the section corresponds to
     const room = await Room.findOne({ _id: sectionInformation.roomId });
