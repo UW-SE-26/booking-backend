@@ -3,6 +3,7 @@ import sectionModel from '../../../models/section.model';
 import timeBlockModel from '../../../models/timeBlock.model';
 import Room from '../../../models/room.model';
 import { DateTime } from 'luxon';
+import { Types } from 'mongoose';
 
 const querySectionTimesRoute = async (req: Request, res: Response): Promise<void> => {
     const { id, date } = req.query;
@@ -12,7 +13,7 @@ const querySectionTimesRoute = async (req: Request, res: Response): Promise<void
         return;
     }
 
-    const sectionInformation = await sectionModel.findOne({ _id: id });
+    const sectionInformation = await sectionModel.findOne({ _id: Types.ObjectId(String(id)) });
 
     if (!sectionInformation) {
         res.status(404);
