@@ -6,6 +6,9 @@ import apiRoutes from './routes/api';
 import { JWTPayload } from 'jose/webcrypto/types';
 import { init as initDiscord } from './discord';
 import cookieParser from 'cookie-parser';
+import schedule from 'node-schedule';
+import { DateTime } from 'luxon';
+import timeBlockModel from './models/timeBlock.model';
 
 import './util/keypair'; //Make sure pub/priv keygen is done
 
@@ -46,3 +49,9 @@ mongoose
 if (process.env.ENABLE_DISCORD_BOT === 'true' && process.env.DISCORD_TOKEN !== undefined) {
     initDiscord();
 }
+
+schedule.scheduleJob('0 0 * * *', async () => {
+    let date = DateTime.now();
+    date = date.minus({ days: 7 });
+    await timeBlockModel.deleteMany({ startsAt: { $lt: date.toJSDate() } });
+});
