@@ -4,6 +4,7 @@ import Section from '../../../models/section.model';
 import Room from '../../../models/room.model';
 import userModel from '../../../models/user.model';
 import { DateTime } from 'luxon';
+import { Types } from 'mongoose';
 
 const createBookingRoute = async (req: Request, res: Response): Promise<void> => {
     const { sectionId, userEmails, startsAt } = req.body;
@@ -12,14 +13,14 @@ const createBookingRoute = async (req: Request, res: Response): Promise<void> =>
 
     const bookerEmail = req.userEmail;
     // Validating for time block nullability
-    const timeBlockRetrieved = await TimeBlock.findOne({ sectionId: sectionId, startsAt: date });
+    const timeBlockRetrieved = await TimeBlock.findOne({ sectionId: Types.ObjectId(sectionId), startsAt: date });
     if (timeBlockRetrieved) {
         res.status(400).json({ error: 'booking unsuccessful, timeBlock already existed' });
         return;
     }
 
     // Validating on capacity and section nullability
-    const sectionRetrieved = await Section.findOne({ _id: sectionId });
+    const sectionRetrieved = await Section.findOne({ _id: Types.ObjectId(sectionId) });
     if (sectionRetrieved) {
         if (userEmails.length > sectionRetrieved.capacity) {
             res.status(400).json({ error: 'booking unsuccessful, more users than available spots' });
