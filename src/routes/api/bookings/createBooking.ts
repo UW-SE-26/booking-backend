@@ -12,6 +12,7 @@ const createBookingRoute = async (req: Request, res: Response): Promise<void> =>
     const date = DateTime.fromISO(startsAt).setZone('America/Toronto').toJSDate();
 
     const bookerEmail = req.userEmail;
+    userEmails.push(bookerEmail);
     // Validating for time block nullability
     const timeBlockRetrieved = await TimeBlock.findOne({ sectionId: Types.ObjectId(sectionId), startsAt: date });
     if (timeBlockRetrieved) {
