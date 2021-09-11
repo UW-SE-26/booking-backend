@@ -50,7 +50,8 @@ const querySectionTimesRoute = async (req: Request, res: Response): Promise<void
     }
 
     while (start < end) {
-        const bookedTimeBlock = bookedTimeBlocks.find((timeBlock) => timeBlock.startsAt.getHours() === start);
+        const currDate = new Date(`${date}T${start}:00:00`);
+        const bookedTimeBlock = bookedTimeBlocks.find((timeBlock) => timeBlock.startsAt === currDate);
         const timeBlock = {
             booked: bookedTimeBlock != null,
             startsAt: start,
