@@ -177,7 +177,7 @@ export default {
         let embed = updateEmbed(userArray, maxCapacity, manageState);
         let buttonRow = updateButtons(manageState);
 
-        const message = (await interaction.reply({ embeds: [embed], components: [buttonRow], fetchReply: true })) as Message;
+        const message = (await interaction.reply({ content: `${interaction.user}`, embeds: [embed], components: [buttonRow], fetchReply: true })) as Message;
 
         const buttonCollector = message.createMessageComponentCollector({ componentType: 'BUTTON', time: 120000 });
         const mentionsCollector = interaction!.channel!.createMessageCollector({ time: 120000 });

@@ -174,7 +174,7 @@ export default {
         let selectMenuDate = new MessageActionRow().addComponents(new MessageSelectMenu().setCustomId('dateSelectMenu').setPlaceholder('Select Date of Room Booking').addOptions(getDateOptions()));
         let menuSelectedDate: string;
 
-        const message = (await interaction.reply({ embeds: [embed], components: [selectMenuDate], fetchReply: true })) as Message;
+        const message = (await interaction.reply({ content: `${interaction.user}`, embeds: [embed], components: [selectMenuDate], fetchReply: true })) as Message;
 
         const selectMenuCollector = message.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 120000 });
 
