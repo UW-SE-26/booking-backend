@@ -98,7 +98,7 @@ export default {
             return;
         }
 
-        const message = (await interaction.reply({ embeds: [titleEmbed], components: [bookingResponse], fetchReply: true })) as Message;
+        const message = (await interaction.reply({ content: `<@!${interaction.user.id}>`, embeds: [titleEmbed], components: [bookingResponse], fetchReply: true })) as Message;
         const selectMenuCollector = message.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 120000 });
 
         selectMenuCollector.on('collect', async (selectMenuInteraction: SelectMenuInteraction) => {
