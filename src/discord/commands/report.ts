@@ -55,7 +55,7 @@ export default {
                 .addOptions(await retrieveRooms())
         );
 
-        const message = (await interaction.reply({ content: `<@!${interaction.user.id}>`, embeds: [mainEmbed], components: [selectMenu], ephemeral: false, fetchReply: true })) as Message;
+        const message = (await interaction.reply({ content: `${interaction.user}`, embeds: [mainEmbed], components: [selectMenu], ephemeral: false, fetchReply: true })) as Message;
 
         const selectMenuCollector = message.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 120000 });
         const buttonCollector = message.createMessageComponentCollector({ componentType: 'BUTTON', time: 120000 });
