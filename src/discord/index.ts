@@ -4,7 +4,7 @@ import events from './events/index';
 const intents = new Intents();
 intents.add('GUILDS', 'GUILD_MEMBERS', 'GUILD_MESSAGES', 'GUILD_MESSAGE_REACTIONS', 'DIRECT_MESSAGES', 'DIRECT_MESSAGE_REACTIONS');
 
-const client = new Client({ intents: intents });
+const client = new Client({ intents: intents, partials: ['CHANNEL'] });
 
 export function init(): void {
     client.login(process.env.DISCORD_TOKEN);

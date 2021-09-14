@@ -1,4 +1,4 @@
-import { CommandInteraction, MessageActionRow, MessageEmbed, MessageSelectMenu, MessageButton, SelectMenuInteraction, Message, ButtonInteraction } from 'discord.js';
+import { CommandInteraction, MessageActionRow, MessageEmbed, MessageSelectMenu, MessageButton, SelectMenuInteraction, Message, ButtonInteraction, TextChannel } from 'discord.js';
 import { Types } from 'mongoose';
 import RoomModel from '../../models/room.model';
 import SectionModel from '../../models/section.model';
@@ -59,7 +59,8 @@ export default {
 
         const selectMenuCollector = message.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 120000 });
         const buttonCollector = message.createMessageComponentCollector({ componentType: 'BUTTON', time: 120000 });
-        const messageCollector = interaction!.channel!.createMessageCollector({ time: 120000 });
+        const channel = interaction.channel?.partial ? await interaction.channel.fetch() : (interaction.channel as TextChannel);
+        const messageCollector = channel.createMessageCollector({ time: 120000 });
 
         let selectedroomId: string;
         let selectedsectionId: string;

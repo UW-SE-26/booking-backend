@@ -1,4 +1,4 @@
-import { ButtonInteraction, CommandInteraction, Message, MessageActionRow, MessageButton, MessageEmbed, SelectMenuInteraction } from 'discord.js';
+import { ButtonInteraction, CommandInteraction, Message, MessageActionRow, MessageButton, MessageEmbed, SelectMenuInteraction, TextChannel } from 'discord.js';
 import { Types } from 'mongoose';
 import TimeblockModel from '../../models/timeBlock.model';
 import SectionModel from '../../models/section.model';
@@ -180,7 +180,8 @@ export default {
         const message = (await interaction.reply({ content: `${interaction.user}`, embeds: [embed], components: [buttonRow], fetchReply: true })) as Message;
 
         const buttonCollector = message.createMessageComponentCollector({ componentType: 'BUTTON', time: 120000 });
-        const mentionsCollector = interaction!.channel!.createMessageCollector({ time: 120000 });
+        const channel = interaction.channel?.partial ? await interaction.channel.fetch() : (interaction.channel as TextChannel);
+        const mentionsCollector = channel!.createMessageCollector({ time: 120000 });
 
         buttonCollector.on('collect', async (buttonInteraction: ButtonInteraction) => {
             //Temporary check as message isn't ephemeral
