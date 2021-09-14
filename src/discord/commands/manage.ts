@@ -216,7 +216,7 @@ export default {
                     return;
                 }
 
-                message.delete();
+                if (message.deletable) message.delete();
 
                 for (const mentionedUser of mentionedUsers) {
                     switch (manageState) {

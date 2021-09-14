@@ -132,7 +132,7 @@ export default {
                 issueMessage = message.content;
                 const messageEmbed = new MessageEmbed().setColor('#64ff5c').setTitle(`Current Issue Description`).setDescription(issueMessage);
 
-                message.delete();
+                if (message.deletable) message.delete();
 
                 interaction.editReply({ embeds: [messageEmbed] });
             }
