@@ -110,11 +110,11 @@ export default {
                     return;
                 }
 
-                const authorUsername = message!.guild!.members.cache.get(bookingInformation.booker)?.user.username;
+                const authorUsername = message?.guild?.members.cache.get(bookingInformation.booker)?.user.tag;
 
                 const informationEmbed = new MessageEmbed()
                     .setColor('#48d7fb')
-                    .setAuthor(`Booked by: @${authorUsername}`) //Author field does not accept Discord ID to Mention conversion
+                    .setAuthor(`Booked by: ${authorUsername ?? bookingInformation.booker}`) //Author field does not accept Discord ID to Mention conversion
                     .setTitle(`${bookingInformation.roomName} - ${bookingInformation.sectionName}`)
                     .addField('Day of Week:', `${bookingInformation.startDate.weekdayLong}`, true)
                     .addField('Date:', `${bookingInformation.startDate.monthLong} ${bookingInformation.startDate.day}${dateSuffix(bookingInformation.startDate.day)}`, true)

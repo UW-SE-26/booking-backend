@@ -23,7 +23,7 @@ export default {
 
             if (commandName === 'deployguild') {
                 if (message.guild) {
-                    await message.guild!.commands.set(data);
+                    await message.guild.commands.set(data);
                     message.reply('Slash commands have been loaded in this guild!');
                 } else {
                     message.reply("You can't set guild commands outside of a guild!");
@@ -34,7 +34,7 @@ export default {
             }
         } else if (commandName === 'resetguild') {
             if (message.guild) {
-                await message.guild!.commands.set([]);
+                await message.guild.commands.set([]);
                 message.reply('Guild commands have been successfully reset.');
             } else {
                 message.reply("You can't reset guild commands outside of a guild!");
