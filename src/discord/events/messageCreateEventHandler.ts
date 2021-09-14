@@ -10,7 +10,7 @@ export default {
         const messageContent = message.content.slice(1).replace(/\s+/g, ' ').trim().split(/ (.+)/);
         const commandName = messageContent.shift()?.toLowerCase();
 
-        if (commandName === 'deployguild' || commandName === 'deployall') {
+        if (commandName === 'deployguild' || commandName === 'deployglobal') {
             const data: ApplicationCommandData[] = [];
 
             for (const command of commands) {
@@ -28,7 +28,7 @@ export default {
                 } else {
                     message.reply("You can't set guild commands outside of a guild!");
                 }
-            } else if (commandName === 'deployall') {
+            } else if (commandName === 'deployglobal') {
                 await message.client.application?.commands.set(data);
                 message.reply('Slash commands have been loaded globally!');
             }
@@ -39,6 +39,9 @@ export default {
             } else {
                 message.reply("You can't reset guild commands outside of a guild!");
             }
+        } else if (commandName === 'resetglobal') {
+            await message.client.application?.commands.set([]);
+            message.reply('Global commands have been successfully reset.');
         }
     },
 };
