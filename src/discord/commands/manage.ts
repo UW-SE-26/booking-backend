@@ -2,6 +2,7 @@ import { ButtonInteraction, CommandInteraction, Message, MessageActionRow, Messa
 import { Types } from 'mongoose';
 import TimeblockModel from '../../models/timeBlock.model';
 import SectionModel from '../../models/section.model';
+import { getBookingInfoEmbed } from './view';
 
 function updateEmbed(userArray: string[], maxCapacity: number, manageState: string) {
     const embedTitle = manageState === 'add' ? 'Adding' : 'Removing';
@@ -187,12 +188,21 @@ export default {
             //Temporary check as message isn't ephemeral
             if (buttonInteraction.user.id === interaction.user.id) {
                 switch (buttonInteraction.customId) {
-                    case 'completeBooking':
+                    case 'completeBooking': {
                         await TimeblockModel.updateOne({ _id: bookingId }, { $push: { users: await mongoDBFilter(userArray, bookingId) } }, { upsert: true });
 
-                        interaction.followUp({ content: 'Booking Successfully Booked!', ephemeral: true });
-                        interaction.deleteReply();
+                        const infoEmbed = await getBookingInfoEmbed(buttonInteraction.client, bookingId);
+                        infoEmbed.setTitle('Booking Confirmation');
+                        try {
+                            await interaction.user.send({ embeds: [infoEmbed] });
+                            interaction.followUp({ content: "Booking Successfully Booked! We've sent you a confirmation in your DMs.", ephemeral: true });
+                            interaction.deleteReply();
+                        } catch (e) {
+                            interaction.followUp({ embeds: [infoEmbed], ephemeral: true });
+                            interaction.deleteReply();
+                        }
                         break;
+                    }
                     case 'addCollaborators':
                     case 'removeCollaborators':
                         manageState = buttonInteraction.customId === 'addCollaborators' ? 'add' : 'remove';
