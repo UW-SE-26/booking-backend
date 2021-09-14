@@ -1,9 +1,10 @@
-import { CommandInteraction, MessageButton, MessageEmbed, MessageActionRow, MessageSelectMenu, Message, SelectMenuInteraction } from 'discord.js';
+import { CommandInteraction, MessageButton, MessageEmbed, MessageActionRow, MessageSelectMenu, SelectMenuInteraction, TextChannel } from 'discord.js';
 import TimeblockModel from '../../models/timeBlock.model';
 import SectionModel from '../../models/section.model';
 import RoomModel from '../../models/room.model';
 import { DateTime } from 'luxon';
 import { Types } from 'mongoose';
+import { nanoid } from 'nanoid';
 
 function dateSuffix(day: number) {
     if (day > 3 && day < 21) return 'th';
@@ -56,7 +57,7 @@ async function getBookingInformation(timeBlockId: string) {
     };
 }
 
-async function getUserBookings(userId: string) {
+async function getUserBookings(userId: string, selectMenuId: string) {
     const bookingOptions = [];
     const bookedBookings = await TimeblockModel.find({ users: { $in: [userId] } });
 
@@ -81,7 +82,7 @@ async function getUserBookings(userId: string) {
         return new MessageActionRow().addComponents(new MessageButton().setCustomId('unavailable').setLabel('No Registered Bookings Found!').setStyle('DANGER').setDisabled(true));
     }
 
-    return new MessageActionRow().addComponents(new MessageSelectMenu().setCustomId('bookingSelectMenu').setPlaceholder('Select your Bookings').addOptions(bookingOptions));
+    return new MessageActionRow().addComponents(new MessageSelectMenu().setCustomId(selectMenuId).setPlaceholder('Select your Bookings').addOptions(bookingOptions));
 }
 
 export default {
@@ -91,40 +92,44 @@ export default {
 
     async execute(interaction: CommandInteraction): Promise<void> {
         const titleEmbed = new MessageEmbed().setColor('#48d7fb').setTitle('Your Current Bookings').setDescription('Select a certain booking to see more information.ㅤㅤㅤ ㅤ ㅤ ㅤㅤㅤ\n ');
-        const bookingResponse = await getUserBookings(interaction.user.id);
+        const selectMenuId = nanoid();
+        const bookingResponse = await getUserBookings(interaction.user.id, selectMenuId);
 
         if (!bookingResponse) {
             interaction.reply('Error retrieving booked bookings. Please contact an admin.');
             return;
         }
 
-        const message = (await interaction.reply({ content: `${interaction.user}`, embeds: [titleEmbed], components: [bookingResponse], fetchReply: true })) as Message;
-        const selectMenuCollector = message.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 120000 });
+        await interaction.reply({ embeds: [titleEmbed], components: [bookingResponse], ephemeral: true });
+        const channel = interaction.channel?.partial ? await interaction.channel.fetch() : (interaction.channel as TextChannel);
+        const selectMenuCollector = channel.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 120000 });
 
         selectMenuCollector.on('collect', async (selectMenuInteraction: SelectMenuInteraction) => {
-            if (selectMenuInteraction.user.id === interaction.user.id) {
-                const bookingInformation = await getBookingInformation(selectMenuInteraction.values[0]);
+            if (selectMenuInteraction.customId === selectMenuId) {
+                if (selectMenuInteraction.user.id === interaction.user.id) {
+                    const bookingInformation = await getBookingInformation(selectMenuInteraction.values[0]);
 
-                if (!bookingInformation) {
-                    interaction.reply('Error retrieving booking information. Please contact an admin.');
-                    return;
+                    if (!bookingInformation) {
+                        interaction.reply('Error retrieving booking information. Please contact an admin.');
+                        return;
+                    }
+
+                    const authorUsername = selectMenuInteraction.guild?.members.cache.get(bookingInformation.booker)?.user.tag;
+
+                    const informationEmbed = new MessageEmbed()
+                        .setColor('#48d7fb')
+                        .setAuthor(`Booked by: ${authorUsername ?? bookingInformation.booker}`) //Author field does not accept Discord ID to Mention conversion
+                        .setTitle(`${bookingInformation.roomName} - ${bookingInformation.sectionName}`)
+                        .addField('Day of Week:', `${bookingInformation.startDate.weekdayLong}`, true)
+                        .addField('Date:', `${bookingInformation.startDate.monthLong} ${bookingInformation.startDate.day}${dateSuffix(bookingInformation.startDate.day)}`, true)
+                        .addField('Time:', `${timeConversion(bookingInformation.startDate)} - ${timeConversion(bookingInformation.endDate)}`)
+                        .addField('Invited Collaborators:', `${bookingInformation.bookingUsers.map((user) => `<@!${user}>`).join('\n')}`)
+                        .setFooter(`Booking ID: ${bookingInformation.bookingId}`);
+
+                    selectMenuInteraction.reply({ embeds: [informationEmbed], ephemeral: true });
+                } else {
+                    selectMenuInteraction.reply({ content: "This select menu isn't for you!", ephemeral: true });
                 }
-
-                const authorUsername = message?.guild?.members.cache.get(bookingInformation.booker)?.user.tag;
-
-                const informationEmbed = new MessageEmbed()
-                    .setColor('#48d7fb')
-                    .setAuthor(`Booked by: ${authorUsername ?? bookingInformation.booker}`) //Author field does not accept Discord ID to Mention conversion
-                    .setTitle(`${bookingInformation.roomName} - ${bookingInformation.sectionName}`)
-                    .addField('Day of Week:', `${bookingInformation.startDate.weekdayLong}`, true)
-                    .addField('Date:', `${bookingInformation.startDate.monthLong} ${bookingInformation.startDate.day}${dateSuffix(bookingInformation.startDate.day)}`, true)
-                    .addField('Time:', `${timeConversion(bookingInformation.startDate)} - ${timeConversion(bookingInformation.endDate)}`)
-                    .addField('Invited Collaborators:', `${bookingInformation.bookingUsers.map((user) => `<@!${user}>`).join('\n')}`)
-                    .setFooter(`Booking ID: ${bookingInformation.bookingId}`);
-
-                selectMenuInteraction.reply({ embeds: [informationEmbed], ephemeral: true });
-            } else {
-                selectMenuInteraction.reply({ content: "This select menu isn't for you!", ephemeral: true });
             }
         });
     },
