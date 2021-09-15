@@ -192,7 +192,7 @@ export default {
                         await TimeblockModel.updateOne({ _id: bookingId }, { $push: { users: await mongoDBFilter(userArray, bookingId) } }, { upsert: true });
 
                         const infoEmbed = await getBookingInfoEmbed(buttonInteraction.client, bookingId);
-                        infoEmbed.setTitle('Booking Confirmation');
+                        infoEmbed.setAuthor('Booking Confirmation');
                         try {
                             await interaction.user.send({ embeds: [infoEmbed] });
                             interaction.followUp({ content: "Booking Successfully Booked! We've sent you a confirmation in your DMs.", ephemeral: true });
