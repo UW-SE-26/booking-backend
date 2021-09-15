@@ -9,6 +9,7 @@ export interface Room {
     schedule: [Schedule];
     program: string;
     images: [string];
+    accessInformation: string;
 }
 
 const roomSchema = new Schema<Room>({
@@ -32,6 +33,7 @@ const roomSchema = new Schema<Room>({
         default: 'SE',
     },
     images: [String],
+    accessInformation: String,
 });
 
 const room = model<Room>('Room', roomSchema);

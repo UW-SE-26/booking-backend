@@ -5,6 +5,7 @@ import RoomModel from '../../models/room.model';
 import { DateTime } from 'luxon';
 import { Types } from 'mongoose';
 import { nanoid } from 'nanoid';
+import book from './book';
 
 type FullBookingInfo = {
     roomName: string;
@@ -14,6 +15,7 @@ type FullBookingInfo = {
     bookingUsers: string[];
     booker: string;
     bookingId: string;
+    accessInformation?: string;
 };
 
 function dateSuffix(day: number) {
@@ -64,6 +66,7 @@ async function getBookingInformation(timeBlockId: string): Promise<FullBookingIn
         bookingUsers: bookedBooking.users,
         booker: bookedBooking.booker,
         bookingId: bookedBooking._id,
+        accessInformation: bookedRoom.accessInformation,
     };
 }
 
@@ -73,6 +76,8 @@ export async function getBookingInfoEmbed(client: Client, timeBlockId: string): 
     if (bookingInformation) {
         const authGuild = client.guilds.cache.get('811408878162935829');
         const authorUsername = authGuild?.members.cache.get(bookingInformation.booker)?.user.tag ?? bookingInformation.booker;
+
+        const accessInformation = bookingInformation.accessInformation ?? 'No access code is required to enter this room.';
 
         const informationEmbed = new MessageEmbed()
             .setColor('#48d7fb')
@@ -85,6 +90,7 @@ export async function getBookingInfoEmbed(client: Client, timeBlockId: string): 
             )
             .addField('Time:', `${timeConversion(bookingInformation.startDate)} - ${timeConversion(bookingInformation.endDate)}`)
             .addField('Invited Collaborators:', `${bookingInformation.bookingUsers.map((user) => `<@!${user}>`).join('\n')}`)
+            .addField('Access Information', accessInformation)
             .setFooter(`Booking ID: ${bookingInformation.bookingId}`);
 
         return informationEmbed;
