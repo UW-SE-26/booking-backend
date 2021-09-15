@@ -1,10 +1,9 @@
 import Ping from './ping';
-import Deploy from './deploy';
-import Rooms from './rooms';
 import Book from './book';
+import ManualBook from './manualbook';
 import Manage from './manage';
 import View from './view';
-import Report from './report';
+// import Report from './report'; - temporarily disabled due to bug
 import Delete from './delete';
 
-export default [Deploy, Rooms, Book, Manage, View, Delete, Report, Ping];
+export default [Book, ManualBook, Manage, View, Delete, Ping];
