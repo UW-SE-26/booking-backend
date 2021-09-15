@@ -5,7 +5,6 @@ import RoomModel from '../../models/room.model';
 import { DateTime } from 'luxon';
 import { Types } from 'mongoose';
 import { nanoid } from 'nanoid';
-import book from './book';
 
 type FullBookingInfo = {
     roomName: string;
