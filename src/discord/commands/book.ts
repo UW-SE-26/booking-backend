@@ -28,6 +28,7 @@ async function retrieveSections(selectedRoomId: string) {
     for (const section of sectionJson) {
         sectionArray.push({
             label: `‎‎${section.name}`,
+            description: `Section Capacity: ${section.capacity}`,
             value: `‎${section._id}`,
         });
     }
