@@ -167,6 +167,7 @@ export default {
             description: 'Discord username (@) of the member',
         },
     ],
+    enabled: true,
 
     async execute(interaction: CommandInteraction): Promise<void> {
         await handleCommandInteraction(interaction);

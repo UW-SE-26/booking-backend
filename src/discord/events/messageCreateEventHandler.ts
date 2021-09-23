@@ -14,11 +14,13 @@ export default {
             const data: ApplicationCommandData[] = [];
 
             for (const command of commands) {
-                data.push({
-                    name: command.name,
-                    description: command.description,
-                    options: command.options,
-                });
+                if (command.enabled) {
+                    data.push({
+                        name: command.name,
+                        description: command.description,
+                        options: command.options,
+                    });
+                }
             }
 
             if (commandName === 'deployguild') {

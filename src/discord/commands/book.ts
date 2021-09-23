@@ -96,6 +96,7 @@ export default {
     name: 'book',
     description: 'View all available rooms and sections for booking',
     options: [],
+    enabled: true,
 
     async execute(interaction: CommandInteraction): Promise<void> {
         const privateChannel = interaction.guild
@@ -133,6 +134,7 @@ export default {
 
         const selectMenuCollector = message.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 600000 });
         let selectedRoomId: string;
+        let promptCompleted = false;
 
         selectMenuCollector.on('collect', async (menuInteraction: SelectMenuInteraction) => {
             if (menuInteraction.user.id === interaction.user.id) {
@@ -150,8 +152,12 @@ export default {
                         //ESLint disabled for next line as regex is correct at removing unicode characters. Removes hidden unicode U+200E character that invalidates ObjectId casting
                         const selectionSectionId = menuInteraction.values[0].replace(/[^\x00-\x7F]/g, ''); //eslint-disable-line
 
-                        manualBookCommand.execute(menuInteraction, selectedRoomId, selectionSectionId);
+                        promptCompleted = true;
+                        await manualBookCommand.execute(menuInteraction, selectedRoomId, selectionSectionId);
+
                         await message.delete();
+
+                        selectMenuCollector.stop();
                         break;
                     }
                     default:
@@ -159,6 +165,14 @@ export default {
                 }
             } else {
                 menuInteraction.reply({ content: "This select menu isn't for you!", ephemeral: true });
+            }
+        });
+
+        selectMenuCollector.on('end', async () => {
+            if (!promptCompleted) {
+                if (message.channel && (message.channel as TextChannel).name.startsWith('book-') && message.channel instanceof TextChannel) {
+                    await message.channel.delete();
+                }
             }
         });
     },

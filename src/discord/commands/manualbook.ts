@@ -150,6 +150,7 @@ export default {
             required: true,
         },
     ],
+    enabled: false,
 
     async execute(interaction: CommandInteraction | SelectMenuInteraction, _roomId?: string, _sectionId?: string): Promise<void> {
         if (interaction.isCommand()) {

@@ -19,6 +19,7 @@ export default {
             required: true,
         },
     ],
+    enabled: true,
 
     async execute(interaction: CommandInteraction): Promise<void> {
         const bookingId = interaction.options.getString('booking-id', true);

@@ -130,6 +130,7 @@ export default {
     name: 'view',
     description: 'View all your current bookings',
     options: [],
+    enabled: true,
 
     async execute(interaction: CommandInteraction): Promise<void> {
         const titleEmbed = new MessageEmbed().setColor('#48d7fb').setTitle('Your Current Bookings').setDescription('Select a certain booking to see more information.ㅤㅤㅤ ㅤ ㅤ ㅤㅤㅤ\n ');
