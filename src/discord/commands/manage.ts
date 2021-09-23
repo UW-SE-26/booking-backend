@@ -196,11 +196,14 @@ export default {
                         const infoEmbed = await getBookingInfoEmbed(buttonInteraction.client, bookingId);
                         infoEmbed.setAuthor('Booking Confirmation');
                         try {
+                            promptCompleted = true;
+                            buttonCollector.stop();
+
                             await interaction.user.send({ embeds: [infoEmbed] });
                             await interaction.followUp({ content: "Booking Successfully Booked! We've sent you a confirmation in your DMs.", ephemeral: true });
                             await interaction.deleteReply();
 
-                            if (interaction.channel && (interaction.channel as TextChannel).name.startsWith('book-')) {
+                            if (interaction.channel && (interaction.channel as TextChannel).name === `book-${interaction.user.id}`) {
                                 setTimeout(async () => {
                                     if (interaction.channel instanceof TextChannel) {
                                         await interaction.channel.delete();
@@ -211,7 +214,7 @@ export default {
                             await interaction.followUp({ embeds: [infoEmbed], ephemeral: true });
                             await interaction.deleteReply();
 
-                            if (interaction.channel && (interaction.channel as TextChannel).name.startsWith('book-')) {
+                            if (interaction.channel && (interaction.channel as TextChannel).name === `book-${interaction.user.id}`) {
                                 setTimeout(async () => {
                                     if (interaction.channel instanceof TextChannel) {
                                         await interaction.channel.delete();
@@ -219,9 +222,6 @@ export default {
                                 }, 1000 * 15);
                             }
                         }
-
-                        promptCompleted = true;
-                        buttonCollector.stop();
 
                         break;
                     }

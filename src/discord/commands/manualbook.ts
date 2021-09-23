@@ -217,11 +217,10 @@ export default {
                             startsAt: _startsAt,
                         });
 
-                        manageCommand.handleSelectMenu(menuInteraction, [interaction.user.id], maxCapacity, timeBlock._id);
-
-                        await interaction.deleteReply();
                         promptCompleted = true;
                         selectMenuCollector.stop();
+                        await interaction.deleteReply();
+                        await manageCommand.handleSelectMenu(menuInteraction, [interaction.user.id], maxCapacity, timeBlock._id);
                         break;
                     }
                     default:
@@ -234,7 +233,7 @@ export default {
 
         selectMenuCollector.on('end', async () => {
             if (!promptCompleted) {
-                if (message.channel && (message.channel as TextChannel).name.startsWith('book-') && message.channel instanceof TextChannel) {
+                if (message.channel && (message.channel as TextChannel).name === `book-${interaction.user.id}` && message.channel instanceof TextChannel) {
                     await message.channel.delete();
                 }
             }

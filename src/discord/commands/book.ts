@@ -153,11 +153,10 @@ export default {
                         const selectionSectionId = menuInteraction.values[0].replace(/[^\x00-\x7F]/g, ''); //eslint-disable-line
 
                         promptCompleted = true;
-                        await manualBookCommand.execute(menuInteraction, selectedRoomId, selectionSectionId);
-
                         await message.delete();
-
                         selectMenuCollector.stop();
+
+                        await manualBookCommand.execute(menuInteraction, selectedRoomId, selectionSectionId);
                         break;
                     }
                     default:
@@ -170,7 +169,7 @@ export default {
 
         selectMenuCollector.on('end', async () => {
             if (!promptCompleted) {
-                if (message.channel && (message.channel as TextChannel).name.startsWith('book-') && message.channel instanceof TextChannel) {
+                if (message.channel && (message.channel as TextChannel).name === `book-${interaction.user.id}` && message.channel instanceof TextChannel) {
                     await message.channel.delete();
                 }
             }
