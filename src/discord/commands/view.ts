@@ -9,6 +9,7 @@ import { nanoid } from 'nanoid';
 type FullBookingInfo = {
     roomName: string;
     sectionName: string;
+    capacity: number;
     startDate: DateTime;
     endDate: DateTime;
     bookingUsers: string[];
@@ -60,6 +61,7 @@ async function getBookingInformation(timeBlockId: string): Promise<FullBookingIn
     return {
         roomName: bookedRoom.name,
         sectionName: bookedSection.name,
+        capacity: bookedSection.capacity,
         startDate: _startDate,
         endDate: _startDate.plus({ hours: 1 }),
         bookingUsers: bookedBooking.users,
@@ -82,13 +84,13 @@ export async function getBookingInfoEmbed(client: Client, timeBlockId: string): 
             .setColor('#48d7fb')
             .setAuthor(`Booked by: ${authorUsername ?? bookingInformation.booker}`) //Author field does not accept Discord ID to Mention conversion
             .setTitle(`${bookingInformation.roomName} - ${bookingInformation.sectionName}`)
+            .setDescription(`This section has a maximum capacity of ${bookingInformation.capacity} people. Please do **not** bring more people than the max capacity.`)
             .addField(
                 'Date:',
                 `${bookingInformation.startDate.weekdayLong}, ${bookingInformation.startDate.monthLong} ${bookingInformation.startDate.day}${dateSuffix(bookingInformation.startDate.day)}`,
                 true
             )
-            .addField('Time:', `${timeConversion(bookingInformation.startDate)} - ${timeConversion(bookingInformation.endDate)}`)
-            .addField('Invited Collaborators:', `${bookingInformation.bookingUsers.map((user) => `<@!${user}>`).join('\n')}`)
+            .addField('Time:', `${timeConversion(bookingInformation.startDate)} - ${timeConversion(bookingInformation.endDate)}`, true)
             .addField('Access Information', accessInformation)
             .setFooter(`Booking ID: ${bookingInformation.bookingId}`);
 

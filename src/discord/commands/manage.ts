@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { ButtonInteraction, CommandInteraction, Message, MessageActionRow, MessageButton, MessageEmbed, SelectMenuInteraction, TextChannel } from 'discord.js';
 import { Types } from 'mongoose';
 import TimeblockModel from '../../models/timeBlock.model';
@@ -167,7 +168,7 @@ export default {
             description: 'Discord username (@) of the member',
         },
     ],
-    enabled: true,
+    enabled: false,
 
     async execute(interaction: CommandInteraction): Promise<void> {
         await handleCommandInteraction(interaction);
@@ -175,7 +176,30 @@ export default {
     },
 
     async handleSelectMenu(interaction: SelectMenuInteraction, userArray: string[], maxCapacity: number, bookingId: string): Promise<void> {
-        let manageState = 'add';
+        const infoEmbed = await getBookingInfoEmbed(interaction.client, bookingId);
+        infoEmbed.setAuthor('Booking Confirmation');
+        try {
+            await interaction.user.send({ embeds: [infoEmbed] });
+            await interaction.reply({
+                content: `
+                    Booking successfully created! We've sent you a booking confirmation in your DMs.
+                
+                    Made this booking in error? Cancel it with \`/delete ${bookingId}\`.
+                `,
+                ephemeral: true,
+            });
+        } catch (e) {
+            await interaction.reply({ embeds: [infoEmbed] });
+        }
+
+        if (interaction.channel && (interaction.channel as TextChannel).name === `book-${interaction.user.id}`) {
+            setTimeout(async () => {
+                if (interaction.channel instanceof TextChannel) {
+                    await interaction.channel.delete();
+                }
+            }, 1000 * 15);
+        }
+        /* let manageState = 'add';
         let embed = updateEmbed(userArray, maxCapacity, manageState);
         let buttonRow = updateButtons(manageState);
 
@@ -287,6 +311,6 @@ export default {
 
                 interaction.editReply({ embeds: [userEmbed] });
             }
-        });
+        });*/
     },
 };
