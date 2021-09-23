@@ -196,19 +196,27 @@ export default {
                         infoEmbed.setAuthor('Booking Confirmation');
                         try {
                             await interaction.user.send({ embeds: [infoEmbed] });
-                            interaction.followUp({ content: "Booking Successfully Booked! We've sent you a confirmation in your DMs.", ephemeral: true });
-                            interaction.deleteReply();
+                            await interaction.followUp({ content: "Booking Successfully Booked! We've sent you a confirmation in your DMs.", ephemeral: true });
+                            await interaction.deleteReply();
 
                             if (interaction.channel && (interaction.channel as TextChannel).name.startsWith('book-')) {
                                 setTimeout(async () => {
                                     if (interaction.channel instanceof TextChannel) {
                                         await interaction.channel.delete();
                                     }
-                                }, 1000 * 60 * 4);
+                                }, 1000 * 15);
                             }
                         } catch (e) {
-                            interaction.followUp({ embeds: [infoEmbed], ephemeral: true });
-                            interaction.deleteReply();
+                            await interaction.followUp({ embeds: [infoEmbed], ephemeral: true });
+                            await interaction.deleteReply();
+
+                            if (interaction.channel && (interaction.channel as TextChannel).name.startsWith('book-')) {
+                                setTimeout(async () => {
+                                    if (interaction.channel instanceof TextChannel) {
+                                        await interaction.channel.delete();
+                                    }
+                                }, 1000 * 15);
+                            }
                         }
                         break;
                     }
