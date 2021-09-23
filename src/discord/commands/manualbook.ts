@@ -201,6 +201,15 @@ export default {
                         const _startsAt = selectedDate.set({ hour: parseInt(selectedTimeblock[0]) }).toJSDate();
                         const maxCapacity = parseInt(selectedTimeblock[2]);
 
+                        const existingTimeBlock = await TimeBlockModel.findOne({ sectionId: Types.ObjectId(_sectionId), startsAt: _startsAt });
+                        if (existingTimeBlock) {
+                            await menuInteraction.reply({
+                                embeds: [new MessageEmbed().setColor('RED').setDescription('Error: This timeblock was booked while you were browsing. Please select a different time.')],
+                                ephemeral: true,
+                            });
+                            break;
+                        }
+
                         const timeBlock = await TimeBlockModel.create({
                             users: [interaction.user.id],
                             booker: interaction.user.id,
