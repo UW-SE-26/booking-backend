@@ -1,4 +1,4 @@
-import { CommandInteraction, MessageEmbed, MessageActionRow, MessageSelectMenu, MessageButton, SelectMenuInteraction, Message } from 'discord.js';
+import { CommandInteraction, MessageEmbed, MessageActionRow, MessageSelectMenu, MessageButton, SelectMenuInteraction, Message, TextChannel } from 'discord.js';
 import RoomModel, { Room } from '../../models/room.model';
 import SectionModel, { Section } from '../../models/section.model';
 import TimeBlockModel from '../../models/timeBlock.model';
@@ -176,7 +176,7 @@ export default {
         let menuSelectedDate: string;
 
         const message = (await interaction.reply({ content: `${interaction.user}`, embeds: [embed], components: [selectMenuDate], fetchReply: true })) as Message;
-
+        let promptCompleted = false;
         const selectMenuCollector = message.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 600000 });
 
         selectMenuCollector.on('collect', async (menuInteraction: SelectMenuInteraction) => {
@@ -211,6 +211,8 @@ export default {
                         manageCommand.handleSelectMenu(menuInteraction, [interaction.user.id], maxCapacity, timeBlock._id);
 
                         await interaction.deleteReply();
+                        promptCompleted = true;
+                        selectMenuCollector.stop();
                         break;
                     }
                     default:
@@ -218,6 +220,14 @@ export default {
                 }
             } else {
                 menuInteraction.reply({ content: "This select menu isn't for you!", ephemeral: true });
+            }
+        });
+
+        selectMenuCollector.on('end', async () => {
+            if (!promptCompleted) {
+                if (message.channel && (message.channel as TextChannel).name.startsWith('book-') && message.channel instanceof TextChannel) {
+                    await message.channel.delete();
+                }
             }
         });
     },

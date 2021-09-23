@@ -184,6 +184,7 @@ export default {
         const buttonCollector = message.createMessageComponentCollector({ componentType: 'BUTTON', time: 600000 });
         const channel = interaction.channel?.partial ? await interaction.channel.fetch() : (interaction.channel as TextChannel);
         const mentionsCollector = channel!.createMessageCollector({ time: 600000 });
+        let promptCompleted = false;
 
         buttonCollector.on('collect', async (buttonInteraction: ButtonInteraction) => {
             //Temporary check as message isn't ephemeral
@@ -218,6 +219,10 @@ export default {
                                 }, 1000 * 15);
                             }
                         }
+
+                        promptCompleted = true;
+                        buttonCollector.stop();
+
                         break;
                     }
                     case 'addCollaborators':
@@ -233,6 +238,14 @@ export default {
                 }
             } else {
                 buttonInteraction.reply({ content: "This button isn't for you!", ephemeral: true });
+            }
+        });
+
+        buttonCollector.on('end', async () => {
+            if (!promptCompleted) {
+                if (message.channel && (message.channel as TextChannel).name.startsWith('book-') && message.channel instanceof TextChannel) {
+                    await message.channel.delete();
+                }
             }
         });
 
