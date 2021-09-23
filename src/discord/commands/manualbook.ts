@@ -176,7 +176,7 @@ export default {
 
         const message = (await interaction.reply({ content: `${interaction.user}`, embeds: [embed], components: [selectMenuDate], fetchReply: true })) as Message;
 
-        const selectMenuCollector = message.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 120000 });
+        const selectMenuCollector = message.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 600000 });
 
         selectMenuCollector.on('collect', async (menuInteraction: SelectMenuInteraction) => {
             //Temporary check as message isn't ephemeral

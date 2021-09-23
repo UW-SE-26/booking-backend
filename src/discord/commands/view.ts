@@ -143,7 +143,7 @@ export default {
 
         await interaction.reply({ embeds: [titleEmbed], components: [bookingResponse], ephemeral: true });
         const channel = interaction.channel?.partial ? await interaction.channel.fetch() : (interaction.channel as TextChannel);
-        const selectMenuCollector = channel.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 120000 });
+        const selectMenuCollector = channel.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 600000 });
 
         selectMenuCollector.on('collect', async (selectMenuInteraction: SelectMenuInteraction) => {
             if (selectMenuInteraction.customId === selectMenuId) {

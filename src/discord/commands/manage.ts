@@ -180,9 +180,9 @@ export default {
 
         const message = (await interaction.reply({ content: `${interaction.user}`, embeds: [embed], components: [buttonRow], fetchReply: true })) as Message;
 
-        const buttonCollector = message.createMessageComponentCollector({ componentType: 'BUTTON', time: 120000 });
+        const buttonCollector = message.createMessageComponentCollector({ componentType: 'BUTTON', time: 600000 });
         const channel = interaction.channel?.partial ? await interaction.channel.fetch() : (interaction.channel as TextChannel);
-        const mentionsCollector = channel!.createMessageCollector({ time: 120000 });
+        const mentionsCollector = channel!.createMessageCollector({ time: 600000 });
 
         buttonCollector.on('collect', async (buttonInteraction: ButtonInteraction) => {
             //Temporary check as message isn't ephemeral
@@ -197,6 +197,14 @@ export default {
                             await interaction.user.send({ embeds: [infoEmbed] });
                             interaction.followUp({ content: "Booking Successfully Booked! We've sent you a confirmation in your DMs.", ephemeral: true });
                             interaction.deleteReply();
+
+                            if (interaction.channel && (interaction.channel as TextChannel).name.startsWith('book-')) {
+                                setTimeout(async () => {
+                                    if (interaction.channel instanceof TextChannel) {
+                                        await interaction.channel.delete();
+                                    }
+                                }, 1000 * 60 * 4);
+                            }
                         } catch (e) {
                             interaction.followUp({ embeds: [infoEmbed], ephemeral: true });
                             interaction.deleteReply();
