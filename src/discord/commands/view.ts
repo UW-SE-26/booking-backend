@@ -100,7 +100,7 @@ export async function getBookingInfoEmbed(client: Client, timeBlockId: string): 
 
 async function getUserBookings(userId: string, selectMenuId: string) {
     const bookingOptions = [];
-    const bookedBookings = await TimeblockModel.find({ users: { $in: [userId] } });
+    const bookedBookings = await TimeblockModel.find({ users: { $in: [userId] }, startsAt: { $gte: new Date() } }).sort({ startsAt: 1 });
 
     for (const booking of bookedBookings) {
         const label = booking.booker === userId ? 'Booked' : 'Invited';
