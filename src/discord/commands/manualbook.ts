@@ -1,4 +1,4 @@
-import { CommandInteraction, MessageEmbed, MessageActionRow, MessageSelectMenu, MessageButton, SelectMenuInteraction, Message } from 'discord.js';
+import { CommandInteraction, MessageEmbed, MessageActionRow, MessageSelectMenu, MessageButton, SelectMenuInteraction, Message, TextChannel } from 'discord.js';
 import RoomModel, { Room } from '../../models/room.model';
 import SectionModel, { Section } from '../../models/section.model';
 import TimeBlockModel from '../../models/timeBlock.model';
@@ -150,6 +150,7 @@ export default {
             required: true,
         },
     ],
+    enabled: false,
 
     async execute(interaction: CommandInteraction | SelectMenuInteraction, _roomId?: string, _sectionId?: string): Promise<void> {
         if (interaction.isCommand()) {
@@ -175,8 +176,8 @@ export default {
         let menuSelectedDate: string;
 
         const message = (await interaction.reply({ content: `${interaction.user}`, embeds: [embed], components: [selectMenuDate], fetchReply: true })) as Message;
-
-        const selectMenuCollector = message.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 120000 });
+        let promptCompleted = false;
+        const selectMenuCollector = message.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 600000 });
 
         selectMenuCollector.on('collect', async (menuInteraction: SelectMenuInteraction) => {
             //Temporary check as message isn't ephemeral
@@ -200,6 +201,15 @@ export default {
                         const _startsAt = selectedDate.set({ hour: parseInt(selectedTimeblock[0]) }).toJSDate();
                         const maxCapacity = parseInt(selectedTimeblock[2]);
 
+                        const existingTimeBlock = await TimeBlockModel.findOne({ sectionId: Types.ObjectId(_sectionId), startsAt: _startsAt });
+                        if (existingTimeBlock) {
+                            await menuInteraction.reply({
+                                embeds: [new MessageEmbed().setColor('RED').setDescription('Error: This timeblock was booked while you were browsing. Please select a different time.')],
+                                ephemeral: true,
+                            });
+                            break;
+                        }
+
                         const timeBlock = await TimeBlockModel.create({
                             users: [interaction.user.id],
                             booker: interaction.user.id,
@@ -207,9 +217,10 @@ export default {
                             startsAt: _startsAt,
                         });
 
-                        manageCommand.handleSelectMenu(menuInteraction, [interaction.user.id], maxCapacity, timeBlock._id);
-
+                        promptCompleted = true;
+                        selectMenuCollector.stop();
                         await interaction.deleteReply();
+                        await manageCommand.handleSelectMenu(menuInteraction, [interaction.user.id], maxCapacity, timeBlock._id);
                         break;
                     }
                     default:
@@ -217,6 +228,14 @@ export default {
                 }
             } else {
                 menuInteraction.reply({ content: "This select menu isn't for you!", ephemeral: true });
+            }
+        });
+
+        selectMenuCollector.on('end', async () => {
+            if (!promptCompleted) {
+                if (message.channel && (message.channel as TextChannel).name === `book-${interaction.user.id}` && message.channel instanceof TextChannel) {
+                    await message.channel.delete();
+                }
             }
         });
     },

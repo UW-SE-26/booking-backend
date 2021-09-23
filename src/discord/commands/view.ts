@@ -100,7 +100,7 @@ export async function getBookingInfoEmbed(client: Client, timeBlockId: string): 
 
 async function getUserBookings(userId: string, selectMenuId: string) {
     const bookingOptions = [];
-    const bookedBookings = await TimeblockModel.find({ users: { $in: [userId] } });
+    const bookedBookings = await TimeblockModel.find({ users: { $in: [userId] }, startsAt: { $gte: new Date() } }).sort({ startsAt: 1 });
 
     for (const booking of bookedBookings) {
         const label = booking.booker === userId ? 'Booked' : 'Invited';
@@ -130,6 +130,7 @@ export default {
     name: 'view',
     description: 'View all your current bookings',
     options: [],
+    enabled: true,
 
     async execute(interaction: CommandInteraction): Promise<void> {
         const titleEmbed = new MessageEmbed().setColor('#48d7fb').setTitle('Your Current Bookings').setDescription('Select a certain booking to see more information.ㅤㅤㅤ ㅤ ㅤ ㅤㅤㅤ\n ');
@@ -143,7 +144,7 @@ export default {
 
         await interaction.reply({ embeds: [titleEmbed], components: [bookingResponse], ephemeral: true });
         const channel = interaction.channel?.partial ? await interaction.channel.fetch() : (interaction.channel as TextChannel);
-        const selectMenuCollector = channel.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 120000 });
+        const selectMenuCollector = channel.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 600000 });
 
         selectMenuCollector.on('collect', async (selectMenuInteraction: SelectMenuInteraction) => {
             if (selectMenuInteraction.customId === selectMenuId) {

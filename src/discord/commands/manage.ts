@@ -167,6 +167,7 @@ export default {
             description: 'Discord username (@) of the member',
         },
     ],
+    enabled: true,
 
     async execute(interaction: CommandInteraction): Promise<void> {
         await handleCommandInteraction(interaction);
@@ -180,9 +181,10 @@ export default {
 
         const message = (await interaction.reply({ content: `${interaction.user}`, embeds: [embed], components: [buttonRow], fetchReply: true })) as Message;
 
-        const buttonCollector = message.createMessageComponentCollector({ componentType: 'BUTTON', time: 120000 });
+        const buttonCollector = message.createMessageComponentCollector({ componentType: 'BUTTON', time: 600000 });
         const channel = interaction.channel?.partial ? await interaction.channel.fetch() : (interaction.channel as TextChannel);
-        const mentionsCollector = channel!.createMessageCollector({ time: 120000 });
+        const mentionsCollector = channel!.createMessageCollector({ time: 600000 });
+        let promptCompleted = false;
 
         buttonCollector.on('collect', async (buttonInteraction: ButtonInteraction) => {
             //Temporary check as message isn't ephemeral
@@ -194,13 +196,33 @@ export default {
                         const infoEmbed = await getBookingInfoEmbed(buttonInteraction.client, bookingId);
                         infoEmbed.setAuthor('Booking Confirmation');
                         try {
+                            promptCompleted = true;
+                            buttonCollector.stop();
+
                             await interaction.user.send({ embeds: [infoEmbed] });
-                            interaction.followUp({ content: "Booking Successfully Booked! We've sent you a confirmation in your DMs.", ephemeral: true });
-                            interaction.deleteReply();
+                            await interaction.followUp({ content: "Booking Successfully Booked! We've sent you a confirmation in your DMs.", ephemeral: true });
+                            await interaction.deleteReply();
+
+                            if (interaction.channel && (interaction.channel as TextChannel).name === `book-${interaction.user.id}`) {
+                                setTimeout(async () => {
+                                    if (interaction.channel instanceof TextChannel) {
+                                        await interaction.channel.delete();
+                                    }
+                                }, 1000 * 15);
+                            }
                         } catch (e) {
-                            interaction.followUp({ embeds: [infoEmbed], ephemeral: true });
-                            interaction.deleteReply();
+                            await interaction.followUp({ embeds: [infoEmbed], ephemeral: true });
+                            await interaction.deleteReply();
+
+                            if (interaction.channel && (interaction.channel as TextChannel).name === `book-${interaction.user.id}`) {
+                                setTimeout(async () => {
+                                    if (interaction.channel instanceof TextChannel) {
+                                        await interaction.channel.delete();
+                                    }
+                                }, 1000 * 15);
+                            }
                         }
+
                         break;
                     }
                     case 'addCollaborators':
@@ -216,6 +238,14 @@ export default {
                 }
             } else {
                 buttonInteraction.reply({ content: "This button isn't for you!", ephemeral: true });
+            }
+        });
+
+        buttonCollector.on('end', async () => {
+            if (!promptCompleted) {
+                if (message.channel && (message.channel as TextChannel).name.startsWith('book-') && message.channel instanceof TextChannel) {
+                    await message.channel.delete();
+                }
             }
         });
 

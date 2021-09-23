@@ -57,10 +57,10 @@ export default {
 
         const message = (await interaction.reply({ content: `${interaction.user}`, embeds: [mainEmbed], components: [selectMenu], ephemeral: false, fetchReply: true })) as Message;
 
-        const selectMenuCollector = message.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 120000 });
-        const buttonCollector = message.createMessageComponentCollector({ componentType: 'BUTTON', time: 120000 });
+        const selectMenuCollector = message.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 600000 });
+        const buttonCollector = message.createMessageComponentCollector({ componentType: 'BUTTON', time: 600000 });
         const channel = interaction.channel?.partial ? await interaction.channel.fetch() : (interaction.channel as TextChannel);
-        const messageCollector = channel.createMessageCollector({ time: 120000 });
+        const messageCollector = channel.createMessageCollector({ time: 600000 });
 
         let selectedroomId: string;
         let selectedsectionId: string;
