@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { ButtonInteraction, CommandInteraction, Message, MessageActionRow, MessageButton, MessageEmbed, SelectMenuInteraction, TextChannel } from 'discord.js';
 import { Types } from 'mongoose';
 import TimeblockModel from '../../models/timeBlock.model';
@@ -167,7 +168,7 @@ export default {
             description: 'Discord username (@) of the member',
         },
     ],
-    enabled: true,
+    enabled: false,
 
     async execute(interaction: CommandInteraction): Promise<void> {
         await handleCommandInteraction(interaction);
@@ -175,7 +176,29 @@ export default {
     },
 
     async handleSelectMenu(interaction: SelectMenuInteraction, userArray: string[], maxCapacity: number, bookingId: string): Promise<void> {
-        let manageState = 'add';
+        const infoEmbed = await getBookingInfoEmbed(interaction.client, bookingId);
+        infoEmbed.setAuthor('Booking Confirmation');
+        try {
+            await interaction.user.send({
+                embeds: [infoEmbed],
+                components: [new MessageActionRow().addComponents(new MessageButton().setCustomId(`cancel_booking|${bookingId}`).setLabel('Cancel Booking').setStyle('DANGER'))],
+            });
+            await interaction.reply({
+                content: `Booking successfully created! We've sent you a booking confirmation in your DMs. \n\nWant to view all of your bookings? Use \`/view\`!`,
+                ephemeral: true,
+            });
+        } catch (e) {
+            await interaction.reply({ embeds: [infoEmbed] });
+        }
+
+        if (interaction.channel && (interaction.channel as TextChannel).name.startsWith('book-')) {
+            setTimeout(async () => {
+                if (interaction.channel instanceof TextChannel) {
+                    await interaction.channel.delete();
+                }
+            }, 1000 * 15);
+        }
+        /* let manageState = 'add';
         let embed = updateEmbed(userArray, maxCapacity, manageState);
         let buttonRow = updateButtons(manageState);
 
@@ -203,7 +226,7 @@ export default {
                             await interaction.followUp({ content: "Booking Successfully Booked! We've sent you a confirmation in your DMs.", ephemeral: true });
                             await interaction.deleteReply();
 
-                            if (interaction.channel && (interaction.channel as TextChannel).name === `book-${interaction.user.id}`) {
+                            if (interaction.channel && (interaction.channel as TextChannel).name.startsWith('book-')) {
                                 setTimeout(async () => {
                                     if (interaction.channel instanceof TextChannel) {
                                         await interaction.channel.delete();
@@ -214,7 +237,7 @@ export default {
                             await interaction.followUp({ embeds: [infoEmbed], ephemeral: true });
                             await interaction.deleteReply();
 
-                            if (interaction.channel && (interaction.channel as TextChannel).name === `book-${interaction.user.id}`) {
+                            if (interaction.channel && (interaction.channel as TextChannel).name.startsWith(`book-`)) {
                                 setTimeout(async () => {
                                     if (interaction.channel instanceof TextChannel) {
                                         await interaction.channel.delete();
@@ -287,6 +310,6 @@ export default {
 
                 interaction.editReply({ embeds: [userEmbed] });
             }
-        });
+        });*/
     },
 };

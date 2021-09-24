@@ -19,7 +19,7 @@ import manualBookCommand from './manualbook';
 
 async function retrieveRooms(selectedRoomId?: string) {
     const rooms = [];
-    const roomsJson = await Room.find({});
+    const roomsJson = await Room.find({}).sort({ name: 1 });
 
     for (const room of roomsJson) {
         if (!room.closed) {
@@ -53,25 +53,13 @@ async function retrieveSections(selectedRoomId: string) {
     return new MessageSelectMenu().setCustomId('sectionSelectMenu').setPlaceholder('Select a Section to Book!').addOptions(sectionArray);
 }
 
-async function fetchOrCreatePrivateChannel(user: User, guild: Guild, botId: Snowflake): Promise<TextChannel | null> {
-    const existingChannel = guild.channels.cache.find((channel) => channel.name === `book-${user.id}` && channel.isText() && !channel.isThread());
-    if (existingChannel) {
-        return existingChannel as TextChannel;
-    }
-
-    await guild.channels.fetch();
-
-    const fetchedExistingChannel = guild.channels.cache.find((channel) => channel.name === `book-${user.id}` && channel.isText() && !channel.isThread());
-    if (fetchedExistingChannel) {
-        return fetchedExistingChannel as TextChannel;
-    }
-
+async function createPrivateChannel(user: User, guild: Guild, botId: Snowflake): Promise<TextChannel | null> {
     const category = guild.channels.cache.find((channel) => channel.name === 'Bookings' && channel instanceof CategoryChannel) as CategoryChannel;
     if (!category) {
         console.log('Error: Booking category not found!');
         return null;
     }
-    const newChannel = await guild.channels.create(`book-${user.id}`, {
+    const newChannel = await guild.channels.create(`book-${Date.now()}`, {
         parent: category,
         permissionOverwrites: [
             {
@@ -100,7 +88,7 @@ export default {
 
     async execute(interaction: CommandInteraction): Promise<void> {
         const privateChannel = interaction.guild
-            ? await fetchOrCreatePrivateChannel(interaction.user, interaction.guild, interaction.client.user!.id)
+            ? await createPrivateChannel(interaction.user, interaction.guild, interaction.client.user!.id)
             : interaction.channel?.partial
             ? await interaction.channel.fetch()
             : interaction.channel;
@@ -169,7 +157,7 @@ export default {
 
         selectMenuCollector.on('end', async () => {
             if (!promptCompleted) {
-                if (message.channel && (message.channel as TextChannel).name === `book-${interaction.user.id}` && message.channel instanceof TextChannel) {
+                if (message.channel && (message.channel as TextChannel).name.startsWith('book-') && message.channel instanceof TextChannel) {
                     await message.channel.delete();
                 }
             }

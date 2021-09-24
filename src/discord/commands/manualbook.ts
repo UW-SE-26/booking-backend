@@ -70,7 +70,7 @@ async function searchTimeblocks(selectedDate: string, sectionInformation: Sectio
     //Function finds all available timeblocks for a given date
 
     const currentDate = DateTime.now().setZone('America/Toronto');
-    const nextHour = currentDate.toISODate() === selectedDate ? currentDate.hour + 1 : 0;
+    const nextHour = currentDate.toISODate() === selectedDate ? currentDate.hour : 0;
 
     const startDate = DateTime.fromISO(selectedDate, { zone: 'America/Toronto' }).set({ hour: nextHour });
     const endDate = DateTime.fromISO(selectedDate, { zone: 'America/Toronto' }).set({ hour: 23 });
@@ -217,6 +217,8 @@ export default {
                             startsAt: _startsAt,
                         });
 
+                        console.log(`${interaction.user.tag} created booking with id ${timeBlock._id}.`);
+
                         promptCompleted = true;
                         selectMenuCollector.stop();
                         await interaction.deleteReply();
@@ -233,7 +235,7 @@ export default {
 
         selectMenuCollector.on('end', async () => {
             if (!promptCompleted) {
-                if (message.channel && (message.channel as TextChannel).name === `book-${interaction.user.id}` && message.channel instanceof TextChannel) {
+                if (message.channel && (message.channel as TextChannel).name.startsWith(`book-`) && message.channel instanceof TextChannel) {
                     await message.channel.delete();
                 }
             }

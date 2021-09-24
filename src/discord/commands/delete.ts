@@ -47,6 +47,7 @@ export default {
         } else {
             await TimeblockModel.deleteOne({ _id: Types.ObjectId(bookingId) });
             interaction.reply({ content: 'Booking successfully deleted!', ephemeral: true });
+            console.log(`${interaction.user.tag} cancelled a booking with id ${bookingId}}`);
         }
     },
 };
