@@ -179,20 +179,18 @@ export default {
         const infoEmbed = await getBookingInfoEmbed(interaction.client, bookingId);
         infoEmbed.setAuthor('Booking Confirmation');
         try {
-            await interaction.user.send({ embeds: [infoEmbed] });
+            await interaction.user.send({
+                embeds: [infoEmbed],
+            });
             await interaction.reply({
-                content: `
-                    Booking successfully created! We've sent you a booking confirmation in your DMs.
-                
-                    Made this booking in error? Cancel it with \`/delete ${bookingId}\`.
-                `,
+                content: `Booking successfully created! We've sent you a booking confirmation in your DMs. \n\nWant to view all of your bookings? Use \`/view\`!`,
                 ephemeral: true,
             });
         } catch (e) {
             await interaction.reply({ embeds: [infoEmbed] });
         }
 
-        if (interaction.channel && (interaction.channel as TextChannel).name === `book-${interaction.user.id}`) {
+        if (interaction.channel && (interaction.channel as TextChannel).name.startsWith('book-')) {
             setTimeout(async () => {
                 if (interaction.channel instanceof TextChannel) {
                     await interaction.channel.delete();
@@ -227,7 +225,7 @@ export default {
                             await interaction.followUp({ content: "Booking Successfully Booked! We've sent you a confirmation in your DMs.", ephemeral: true });
                             await interaction.deleteReply();
 
-                            if (interaction.channel && (interaction.channel as TextChannel).name === `book-${interaction.user.id}`) {
+                            if (interaction.channel && (interaction.channel as TextChannel).name.startsWith('book-')) {
                                 setTimeout(async () => {
                                     if (interaction.channel instanceof TextChannel) {
                                         await interaction.channel.delete();
@@ -238,7 +236,7 @@ export default {
                             await interaction.followUp({ embeds: [infoEmbed], ephemeral: true });
                             await interaction.deleteReply();
 
-                            if (interaction.channel && (interaction.channel as TextChannel).name === `book-${interaction.user.id}`) {
+                            if (interaction.channel && (interaction.channel as TextChannel).name.startsWith(`book-`)) {
                                 setTimeout(async () => {
                                     if (interaction.channel instanceof TextChannel) {
                                         await interaction.channel.delete();
