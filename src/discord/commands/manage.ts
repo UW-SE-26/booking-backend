@@ -181,6 +181,7 @@ export default {
         try {
             await interaction.user.send({
                 embeds: [infoEmbed],
+                components: [new MessageActionRow().addComponents(new MessageButton().setCustomId(`cancel_booking|${bookingId}`).setLabel('Cancel Booking').setStyle('DANGER'))],
             });
             await interaction.reply({
                 content: `Booking successfully created! We've sent you a booking confirmation in your DMs. \n\nWant to view all of your bookings? Use \`/view\`!`,
