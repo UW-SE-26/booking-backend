@@ -29,6 +29,7 @@ export default {
             await TimeBlockModel.deleteOne({ _id: Types.ObjectId(bookingId) });
 
             interaction.update({ embeds: [new MessageEmbed().setColor('BLUE').setDescription('This booking was cancelled.')], components: [] });
+            console.log(`${interaction.user.tag} cancelled a booking with id ${bookingId}`);
         }
     },
 };

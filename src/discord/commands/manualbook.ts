@@ -217,6 +217,8 @@ export default {
                             startsAt: _startsAt,
                         });
 
+                        console.log(`${interaction.user.tag} created booking with id ${timeBlock._id}.`);
+
                         promptCompleted = true;
                         selectMenuCollector.stop();
                         await interaction.deleteReply();
