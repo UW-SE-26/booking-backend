@@ -12,17 +12,17 @@ export default {
             const bookedTimeblock = await TimeBlockModel.findOne({ _id: Types.ObjectId(bookingId) });
 
             if (!bookedTimeblock) {
-                interaction.reply({ embeds: [new MessageEmbed().setColor('RED').setDescription('This booking could not be found. Perhaps it was already deleted?')] });
+                interaction.reply({ embeds: [new MessageEmbed().setColor('RED').setDescription('This booking could not be found. Perhaps it was already deleted?')], ephemeral: true });
                 return;
             }
 
             if (bookedTimeblock.startsAt < new Date()) {
-                interaction.reply({ embeds: [new MessageEmbed().setColor('RED').setDescription("You can't delete bookings in the past.")] });
+                interaction.reply({ embeds: [new MessageEmbed().setColor('RED').setDescription("You can't delete bookings in the past.")], ephemeral: true });
                 return;
             }
 
             if (bookedTimeblock.booker !== interaction.user.id) {
-                interaction.reply({ embeds: [new MessageEmbed().setColor('RED').setDescription('You do not have permission to delete this booking.')] });
+                interaction.reply({ embeds: [new MessageEmbed().setColor('RED').setDescription('You do not have permission to delete this booking.')], ephemeral: true });
                 return;
             }
 
