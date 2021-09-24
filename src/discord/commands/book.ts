@@ -19,7 +19,7 @@ import manualBookCommand from './manualbook';
 
 async function retrieveRooms(selectedRoomId?: string) {
     const rooms = [];
-    const roomsJson = await Room.find({});
+    const roomsJson = await Room.find({}).sort({ name: 1 });
 
     for (const room of roomsJson) {
         if (!room.closed) {
