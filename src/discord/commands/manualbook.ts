@@ -70,7 +70,7 @@ async function searchTimeblocks(selectedDate: string, sectionInformation: Sectio
     //Function finds all available timeblocks for a given date
 
     const currentDate = DateTime.now().setZone('America/Toronto');
-    const nextHour = currentDate.toISODate() === selectedDate ? currentDate.hour + 1 : 0;
+    const nextHour = currentDate.toISODate() === selectedDate ? currentDate.hour : 0;
 
     const startDate = DateTime.fromISO(selectedDate, { zone: 'America/Toronto' }).set({ hour: nextHour });
     const endDate = DateTime.fromISO(selectedDate, { zone: 'America/Toronto' }).set({ hour: 23 });
