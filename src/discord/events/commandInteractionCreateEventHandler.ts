@@ -13,7 +13,7 @@ export default {
             return interaction.reply({ content: 'We ran into an error authenticating you. Please try again later or message an admin.', ephemeral: true });
         } else {
             const member = await authGuild.members.fetch(interaction.user.id);
-            if (!member.roles.cache.find((role) => role.name === 'SE')) {
+            if (!member.roles.cache.find((role) => role.name === 'SE') && !member.roles.cache.find((role) => role.name === 'Faculty')) {
                 return interaction.reply({
                     content: 'You must have the SE role on the SE Soc Discord server to create a booking. Join and verify here: https://discord.gg/Kc6AdbpvCX',
                     ephemeral: true,
