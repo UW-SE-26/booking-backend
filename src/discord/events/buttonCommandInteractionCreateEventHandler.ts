@@ -1,6 +1,8 @@
 import { Interaction, MessageEmbed } from 'discord.js';
 import { Types } from 'mongoose';
 import TimeBlockModel from '../../models/timeBlock.model';
+import BookCommand from '../commands/book';
+import ViewCommand from '../commands/view';
 export default {
     name: 'interactionCreate',
 
@@ -30,6 +32,14 @@ export default {
 
             interaction.update({ embeds: [new MessageEmbed().setColor('BLUE').setDescription('This booking was cancelled.')], components: [] });
             console.log(`${interaction.user.tag} cancelled a booking with id ${bookingId}`);
+        }
+
+        if (interaction.customId === 'create_booking') {
+            await BookCommand.execute(interaction);
+        }
+
+        if (interaction.customId === 'view_bookings') {
+            await ViewCommand.execute(interaction);
         }
     },
 };

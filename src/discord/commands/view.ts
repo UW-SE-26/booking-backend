@@ -1,4 +1,4 @@
-import { CommandInteraction, MessageButton, MessageEmbed, MessageActionRow, MessageSelectMenu, SelectMenuInteraction, TextChannel, Client } from 'discord.js';
+import { CommandInteraction, MessageButton, MessageEmbed, MessageActionRow, MessageSelectMenu, SelectMenuInteraction, TextChannel, Client, ButtonInteraction } from 'discord.js';
 import TimeblockModel from '../../models/timeBlock.model';
 import SectionModel from '../../models/section.model';
 import RoomModel from '../../models/room.model';
@@ -122,7 +122,7 @@ async function getUserBookings(userId: string, selectMenuId: string) {
     }
 
     if (!bookingOptions.length) {
-        return new MessageActionRow().addComponents(new MessageButton().setCustomId('unavailable').setLabel('No Registered Bookings Found!').setStyle('DANGER').setDisabled(true));
+        return new MessageActionRow().addComponents(new MessageButton().setCustomId('unavailable').setLabel('No Bookings Were Found').setStyle('DANGER').setDisabled(true));
     }
 
     return new MessageActionRow().addComponents(new MessageSelectMenu().setCustomId(selectMenuId).setPlaceholder('Select your Bookings').addOptions(bookingOptions));
@@ -134,7 +134,7 @@ export default {
     options: [],
     enabled: true,
 
-    async execute(interaction: CommandInteraction): Promise<void> {
+    async execute(interaction: CommandInteraction | ButtonInteraction): Promise<void> {
         const titleEmbed = new MessageEmbed().setColor('#48d7fb').setTitle('Your Current Bookings').setDescription('Select a certain booking to see more information.ㅤㅤㅤ ㅤ ㅤ ㅤㅤㅤ\n ');
         const selectMenuId = nanoid();
         const bookingResponse = await getUserBookings(interaction.user.id, selectMenuId);
@@ -158,6 +158,10 @@ export default {
                     selectMenuInteraction.reply({ content: "This select menu isn't for you!", ephemeral: true });
                 }
             }
+        });
+
+        selectMenuCollector.on('end', async () => {
+            await interaction.editReply({ embeds: [new MessageEmbed().setDescription('This prompt has expired.').setColor('RED')], components: [] });
         });
     },
 };

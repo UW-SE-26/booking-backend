@@ -1,4 +1,4 @@
-import { ApplicationCommandData, Message } from 'discord.js';
+import { ApplicationCommandData, Message, MessageActionRow, MessageButton, MessageEmbed } from 'discord.js';
 import commands from '../commands';
 
 export default {
@@ -44,6 +44,25 @@ export default {
         } else if (commandName === 'resetglobal') {
             await message.client.application?.commands.set([]);
             message.reply('Global commands have been successfully reset.');
+        }
+
+        if (commandName === 'sendprompt') {
+            const embed = new MessageEmbed()
+                .setTitle('SE Student Spaces')
+                .setDescription(
+                    `SE spaces are now open for SE students to study in!
+                    Due to COVID-19 restrictions, you must book these spaces here on Discord before you can use them. Rooms are divided into sections so that social distancing can be maintained.
+                
+                    Currently, only DC 2567 and DC 2577 are open. EIT 3146 and DC 2523 will be opening soon as additional study spaces.`
+                )
+                .addField('How do I book a space?', "Click the button below and follow the prompts to book a space. You'll receive a booking confirmation once your booking is created.")
+                .setColor('#b265ff');
+
+            const componentRow = new MessageActionRow().addComponents(
+                new MessageButton().setCustomId('create_booking').setStyle('PRIMARY').setLabel('Create a Booking'),
+                new MessageButton().setCustomId('view_bookings').setStyle('SECONDARY').setLabel('View My Bookings')
+            );
+            message.channel.send({ embeds: [embed], components: [componentRow] });
         }
     },
 };
