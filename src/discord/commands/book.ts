@@ -11,6 +11,7 @@ import {
     Permissions,
     Snowflake,
     TextChannel,
+    ButtonInteraction,
 } from 'discord.js';
 import { Types } from 'mongoose';
 import Room from '../../models/room.model';
@@ -54,7 +55,7 @@ async function retrieveSections(selectedRoomId: string) {
 }
 
 async function createPrivateChannel(user: User, guild: Guild, botId: Snowflake): Promise<TextChannel | null> {
-    const category = guild.channels.cache.find((channel) => channel.name === 'Bookings' && channel instanceof CategoryChannel) as CategoryChannel;
+    const category = guild.channels.cache.find((channel) => channel.name === 'SE Spaces' && channel instanceof CategoryChannel) as CategoryChannel;
     if (!category) {
         console.log('Error: Booking category not found!');
         return null;
@@ -86,7 +87,7 @@ export default {
     options: [],
     enabled: true,
 
-    async execute(interaction: CommandInteraction): Promise<void> {
+    async execute(interaction: CommandInteraction | ButtonInteraction): Promise<void> {
         const privateChannel = interaction.guild
             ? await createPrivateChannel(interaction.user, interaction.guild, interaction.client.user!.id)
             : interaction.channel?.partial
@@ -115,7 +116,14 @@ export default {
             });
         } else {
             await interaction.reply({
-                embeds: [new MessageEmbed().setColor('GREEN').setTitle('Booking Process Started').setDescription(`[Click here to start the booking!](${message.url})`)],
+                embeds: [
+                    new MessageEmbed()
+                        .setColor('GREEN')
+                        .setTitle('Booking Process Started')
+                        .setDescription(
+                            `[Click here to start the booking!](${message.url})\n\nIf the link doesn't work, your booking request has expired or was completed - please start a new request using \`/book\`.`
+                        ),
+                ],
                 ephemeral: true,
             });
         }
@@ -156,6 +164,8 @@ export default {
         });
 
         selectMenuCollector.on('end', async () => {
+            await interaction.editReply({ embeds: [new MessageEmbed().setDescription('This prompt has expired.').setColor('RED')], components: [] });
+
             if (!promptCompleted) {
                 if (message.channel && (message.channel as TextChannel).name.startsWith('book-') && message.channel instanceof TextChannel) {
                     await message.channel.delete();
